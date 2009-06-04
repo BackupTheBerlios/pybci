@@ -44,10 +44,10 @@ else:
   config.add_section('system')
 
 setup(  name="PyBCI",
-        version = "0.1.1",
+        version = "0.2",
         author = "Benedikt Zoefel",
         description = "Python Brain Computer Interface for reading EEG data online, using Brain Vision Recorder",
-        packages = ["PyBCI", "PyBCI.bci_source"],
+        packages = ["PyBCI", "PyBCI.bci_source", "PyBCI.tools"],
         package_data = {'PyBCI.bci_source': ['_bci_source.pyd']},
         data_files = [(config.get('system', 'windows_path'), ['inpout32.dll', 'glut32.dll'])]
         )

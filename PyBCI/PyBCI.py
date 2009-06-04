@@ -28,7 +28,7 @@ OTHER DEALINGS IN THE SOFTWARE."""
 
 
 import numpy as N
-from PyBCI.bci_source import *
+from bci_source import *
 from threading import *
 import pickle
 from scipy.io import savemat
