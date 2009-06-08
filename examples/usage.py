@@ -47,15 +47,14 @@ resolution = 0.1  # ...and a signal resolution of 0.1 microvolt in our Brain Rec
 numof_channels = 10 # ...channels...
 
 
-# ...and to be able to show signs in a separate window by means of a square.
+# ...and to be able to show signs in a separate window.
 mode = 'signs_enabled'
-shape = 'quads'
 
 
 # Additionally, we want to write the data into a binary file.
 
 # Thus, we create a configuration file to save our parameters.
-make_config('BCI.cfg', sample_rate = sample_rate, numof_channels = numof_channels, mode = mode, shape = shape, saving_mode = True, data_file = 'example_file.dat', format = 'binary', resolution = resolution)
+make_config('BCI.cfg', sample_rate = sample_rate, numof_channels = numof_channels, mode = mode, saving_mode = True, data_file = 'example_file.dat', format = 'binary', resolution = resolution)
 
 
 
@@ -83,24 +82,30 @@ time.sleep(2)
 example_bci.set_returning_speed(0)   
 
 
-example_bci.trigger_sign(300)   # Trigger a sign for 300 milliseconds before getting the data.
+# We trigger a sign for 300 milliseconds before getting the data by means of a square.
+example_bci.trigger_sign('quads', 300)   
 
- # At the moment we are just interested in the first (current) data block (made up of <example_bci.numof_samples> 
- # samples for each of the <numof_channels> channels).
-example_datablock = example_bci.get_datablock()   
+# At the moment we are just interested in the first (current) data block (made up of <example_bci.numof_samples> 
+# samples for each of the <numof_channels> channels).
+# Unlike the <get_data>-function, <get_datablock> has no impemented security_mode, so if you want to use it (and it is not
+# switched on in the config file) you have to do that manually. In that case, make sure to reset the counters, otherwise
+# you'll probably get a warning.
 
-
+example_bci.set_security_mode(True)
+example_bci.reset_security_mode()
+example_datablock = example_bci.get_datablock()
+example_bci.set_security_mode(False)
 
 # Just to show that this is possible (it may save time if you set <saving_mode> to False and write the data after
 # collecting it) we call the saving function from 'externally'.
-#In the <get_data>-function it is implemented if you set <saving_mode> to True.
+# In the <get_data>-function it is implemented if you set <saving_mode> to True.
 
 example_bci.save_data(example_blockfile, 'plain', example_datablock)   
 example_blockfile.close()     # In this case we have to close the file manually.
 
 
 # Now let's get a bit more data. Therefore...
-example_bci.trigger_sign(500)   # ...we show a sign for 500 ms...
+example_bci.trigger_sign('triangle', 500)   # ...we show a sign for 500 ms, this time by a triangle...
 
 # ...and request data for the next 10 seconds, with a <security_mode>, that gives us a warning if the number
 # of returned blocks is not equal to the read (that is, 'incoming') ones.

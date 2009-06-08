@@ -550,13 +550,13 @@ short return_samples(unsigned long n, unsigned int channel)
 		if (counter_two-1 > returned_two && security_mode == true)
 		{
 			printf("Warning: Number of read arrays exceeds number of returned ones.\n Consider reducing returning speed.\t%i\t%i\n", counter_two-1, returned_two);
-		
+		    returned_two = counter_two-1;
 		}
 
 		if (counter_two-1 < returned_two && security_mode == true)
 		{
 			printf("Warning: Number of read arrays does not match the number of returned ones.\t%i\t%i\n", counter_two-1, returned_two);
-		
+			returned_two = counter_two-1;		
 		}
 		
 		if (n == numof_samples && channel == numof_channels)
@@ -572,12 +572,13 @@ short return_samples(unsigned long n, unsigned int channel)
 		if (counter_one-1 > returned_one && security_mode == true)
 		{
 			printf("Warning: Number of read arrays exceeds number of returned ones.\n Consider reducing returning speed.\t%i\t%i\n", counter_one-1, returned_one);
+			returned_one = counter_one-1;
 		}
 
 		if (counter_one-1 < returned_one && security_mode == true)
 		{
 			printf("Warning: Number of read arrays does not match the number of returned ones.\t%i\t%i\n", counter_one-1, returned_one);
-		
+			returned_one = counter_one-1;
 		}
 
 		if (n == numof_samples && channel == numof_channels)

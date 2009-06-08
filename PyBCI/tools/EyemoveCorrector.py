@@ -51,13 +51,16 @@ def estimate_impact(baseline, artefact):
                     [numof_channels].
 
     :param artefact: Artefact conditions as a two-dimensional numpy array,
-                     containing mean samples for
+                     containing mean samples for each condition in a
+                     separate array.
+
+                     Example: The conditions
                      
                      1. horizontal eye movements
                      2. vertical eye movements
                      3. eye blinks
                      
-                     thus resulting in a numpy array
+                     would thus result in a numpy array
                      [[numof_channels(hor)],[numof_channels(ver)],
                      [numof_channels(blink)]].
     
@@ -71,12 +74,25 @@ def estimate_impact(baseline, artefact):
               this difference between the two conditions.
     """
 
-    if baseline.shape[0] != artefact.shape[1]:
+    if artefact.ndim == 1:
+        if baseline.shape[0] != artefact.shape[0]:
+            print 'Error: The number of channels has be equal in both conditions.'
+            sys.exit(-1)
+
+        # this is just to avoid one-dimensionality when creating the pseudo-inverse    
+        rest_cond = N.array([baseline, baseline]).T        
+        art_cond = N.array([artefact, artefact]).T
+
+    else:
+        if baseline.shape[0] != artefact.shape[1]:
             print 'Error: The number of channels has be equal in both conditions.'
             sys.exit(-1)
             
-    rest_cond = N.array([baseline, baseline, baseline]).T
-    art_cond = artefact.T
+        rest_cond = N.zeros((artefact.shape[1], artefact.shape[0]))
+        for l in range(artefact.shape[1]):
+            rest_cond[l] = baseline
+        rest_cond = rest_cond.T
+        art_cond = artefact.T
 
     diff = art_cond-rest_cond
 

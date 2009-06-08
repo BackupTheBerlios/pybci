@@ -40,7 +40,7 @@ from string import atoi
 data_restart = False
 
 class Connect(Thread):
-    """This class is used just internally to start the BCI in a seperate thread."""
+    """This class is used just internally to start the BCI in a separate thread."""
     def __init__(self, numof_channels, mode, server):
         Thread.__init__(self)
 
@@ -55,12 +55,17 @@ class Sign(Thread):
     def __init__(self, shape):
         Thread.__init__(self)
         self.shape = shape
+        self.shape_toshow = 1
+        self.time = 1
+        self.sign = Event()
 
-    def trigger_sign(self, time):
-        give_sign(self.shape, time)
+    def run(self):
+        while(True):
+            self.sign.wait()
+            give_sign(self.shape.get(self.shape_toshow, 1), self.time)
+            self.sign.clear()
 
-        
-
+    
 class BCI (object):
     """
        This is the main BCI class. The only thing you need to start the BCI, is a configuration file.
@@ -79,7 +84,7 @@ class BCI (object):
     def __init__(self, config_file):
         
         # Create configuration parser with defaults
-        config = ConfigParser.RawConfigParser({'server': 'localhost', 'shape': 'None', 'security_mode': False, 'saving_mode': False, 'file': 'Nofile', 'format': 'binary', 'resolution': '0.1'})
+        config = ConfigParser.RawConfigParser({'server': 'localhost', 'security_mode': False, 'saving_mode': False, 'file': 'Nofile', 'format': 'binary', 'resolution': '0.1'})
         if config.read(config_file):
 
             self.numof_channels = atoi(config.get('technics', 'numof_channels'))
@@ -87,11 +92,26 @@ class BCI (object):
             self.server = config.get('technics', 'server')
             self.resolution = float(config.get('technics', 'resolution'))
             self.mode = config.get('visualization', 'mode')
-            self.shape = config.get('visualization', 'shape')
-            self.saving_mode = config.getboolean('data', 'saving_mode')
-            self.data_file = config.get('data', 'file')
-            self.format = config.get('data', 'format')
-            self.security_mode = config.getboolean('security', 'security_mode')
+
+            if config.has_section('data'):
+                self.saving_mode = config.getboolean('data', 'saving_mode')
+                self.data_file = config.get('data', 'file')
+                self.format = config.get('data', 'format')
+            else:
+                self.saving_mode = config._defaults['saving_mode']
+                self.data_file = config._defaults['file']
+                self.format = config._defaults['format']
+
+            if config.has_section('security'):
+                self.security_mode = config.getboolean('security', 'security_mode')
+            else:
+                self.security_mode = config._defaults['security_mode']
+                
+            print 'Configuration file', config_file, 'read.'
+            print 'Sample rate:', self.sample_rate, 'Hz.'
+            print 'Data is read from', self.numof_channels, 'channels.'
+            print 'Brain Recorder resolution is', self.resolution, 'microvolt.'
+            print
             
             self.data_restart = False
             
@@ -101,11 +121,13 @@ class BCI (object):
 
         if self.security_mode == True:
             set_security_mode(True)
+            print 'Security mode switched on.'
         elif self.security_mode != False:
             print 'Warning: This security mode is not available. Set to "False" by default.'
             set_security_mode(False)
 
         if self.saving_mode == True:
+            print 'Saving mode switched on. Data is saved in file', self.data_file, '.'
             if self.data_file == 'Nofile':
                 print 'Error: Saving mode is activated, but no data file is specified.'
             else:
@@ -119,18 +141,11 @@ class BCI (object):
             self.saving_mode = False 
         
         if self.mode == 'signs_enabled':
+            print 'Sign mode enabled.'
             self.mode = 1
-            if self.shape == 'None':
-                print 'Warning: Mode is set to "signs_enabled" but no sign shape has been specified. Set to "triangles" by default.' 
-                self.shape = 1
-            elif self.shape == 'triangles':
-                self.shape = 1
-            elif self.shape == 'quads':
-                self.shape = 2
-            else:
-                print 'Warning: This shape is not available. Set to "triangles" by default.'
-                self.shape = 1
+            self.shape = {1:1, 'triangle':1, 2:2, 'quads':2}
         elif self.mode == 'signs_disabled':
+            print 'Sign mode disabled.'
             self.mode = 2
         else:
             print 'Warning: This mode is not available. Switched to "signs_disabled".'
@@ -138,24 +153,36 @@ class BCI (object):
 
         connect = Connect(self.numof_channels, self.mode, self.server)   # start BCI in a seperate thread
         self.sign = Sign(self.shape)   # start signing mode in a seperate thread
+        self.sign.start()
         self.blocksize = get_blocksize()    # number of samples in one data block sent by Brain Recorder
         self.numof_samples = get_numof_samples()    # number of samples in one data storing array
 
-    def trigger_sign(self, time):
-        """If <mode> is 'signs_enabled' you may use this function to give a sign in a seperate
-        window with the shape <shape>. It is shown for <time> milliseconds."""
-        self.sign.trigger_sign(time)
+    def trigger_sign(self, shape, time):
+        """
+        If <mode> is 'signs_enabled' you may use this function to give a sign in a seperate
+        window with the shape <shape>. It is shown for <time> milliseconds.
+
+        Possible values for <shape> are
+        1 or 'triangle' for a triangular shape   or
+        2 or 'quads' for a quadratic shape,
+        with 'triangle' as a default if the *shape* you specify is invalid.
+        """
+        self.sign.shape_toshow = shape
+        self.sign.time = time
+        self.sign.sign.set()
 
     def reset_security_mode(self):
-        """Resets the counters for read and returned data arrays. This may be useful if you do not want to have all the data be returned since the Recorder is running and still be sure
-            not to miss data while requesting it. Mainly used internally."""
+        """Resets the counters for read and returned data arrays. This may be useful if you do
+           not want to have all the data be returned
+           since the Recorder is running and still be sure
+           not to miss data while requesting it. Mainly used internally."""
         reset_security_mode()
 
     def set_security_mode(self, mode):
         """Sets the security mode. If true (false is default), a warning is raised if the number
            of returned blocks is not equal to the read ones.
            That may be useful if you want to be sure not to miss samples/data blocks or to avoid
-           reading blocks twice. See also class documentation and example.py"""
+           reading blocks twice. See also class documentation and usage.py"""
         set_security_mode(mode)
 
     def set_returning_speed(self, level):
@@ -216,14 +243,14 @@ class BCI (object):
             for channel in range(self.numof_channels):    # for each channel...
                 for sample in range(self.numof_samples):   # ...get each sample in the current data array...
                     data[channel][sample] = self.__get_sample(sample+1, channel+1)
+                    
             return data*self.resolution   # ...and keep in mind the data resolution...
         
         elif self.supervision_mode:
             self.data_restart = True
             if self.saving_mode == True:
                 # print five zeros to sign stopped Recorder in data file
-                    self.save_data(self.data_file, self.format, N.zeros(5)) 
-            return
+                    self.save_data(self.data_file, self.format, N.zeros(5))
         
         elif self.supervision_mode == False:
             self.get_datablock()  # just restart waiting for data if restart is not necessary
@@ -251,17 +278,18 @@ class BCI (object):
         samples_requested = samples_per_second*time
         blocks_requested = samples_requested/self.numof_samples    # number of blocks (completely 'filled' data arrays) available in the specified time
 
-        data = N.zeros((self.numof_channels, self.numof_samples*blocks_requested))
+        self.data = N.zeros((self.numof_channels, self.numof_samples*blocks_requested))
 
-        if self.security_mode == True:
-            set_security_mode(True)
-            reset_security_mode()    # otherwise you'll probably get a warning message, because Brain Recorder has been started before requesting data
-        elif self.security_mode == False:
-            set_security_mode(False)
-        else:
-            print 'Warning: This security mode is not available. Set to "True" by default.'
-            set_security_mode(True)
-            reset_security_mode()
+        if self.security_mode != security_mode:
+            if security_mode == True:
+                set_security_mode(True)
+                reset_security_mode()    # otherwise you'll probably get a warning message, because Brain Recorder has been started before requesting data
+            elif security_mode == False:
+                set_security_mode(False)
+            else:
+                print 'Warning: This security mode is not available. Set to "True" by default.'
+                set_security_mode(True)
+                reset_security_mode()
 
         # maybe the following loops are worth improving?
 
@@ -271,32 +299,51 @@ class BCI (object):
                 for block in range(blocks_requested):
                     if self.data_restart == False:
                         # get the current datablock for <blocks_requested> times and store it in a new numpy array    
-                        data[:,block*self.numof_samples:(block+1)*self.numof_samples] = self.get_datablock()
+                        self.data[:,block*self.numof_samples:(block+1)*self.numof_samples] = self.get_datablock()
+                        
+                    else: break
 
                 if self.data_restart == False:   # just if everything was all right :)
                     print 'Data collected.'
 
                     if self.saving_mode == True:
-                        self.save_data(self.data_file, self.format, data)
-                    return data
+                        self.save_data(self.data_file, self.format, self.data)
 
-            # this is executed just if data_restart has been set to true by the supervising thread
+                    if self.security_mode != security_mode:
+                        set_security_mode(security_mode == False) # reset the recurity mode to the 'origin'
+                        if self.security_mode == True:
+                            reset_security_mode()
+         
+                    return self.data
+
+            # this is executed just if data_restart has been set to true
             print 'Recorder stopped - Data collection is reseted. Please restart.'
             self.data_restart = False
-            self.get_data(self.time, security_mode) # restart the current function
+            # restart the current function - could be a recursive function, too.
+            self.__restart_collection(self.time, security_mode) 
 
         elif supervision_mode == False:
             print 'Getting data for', time, 'seconds...' 
             for block in range(blocks_requested):   
-                data[:,block*self.numof_samples:(block+1)*self.numof_samples] = self.get_datablock()
+                self.data[:,block*self.numof_samples:(block+1)*self.numof_samples] = self.get_datablock()
 
             print 'Data collected.'
 
             if self.saving_mode == True:
-                self.save_data(self.data_file, self.format, data)
+                self.save_data(self.data_file, self.format, self.data)
 
-            return data
+            if self.security_mode != security_mode:
+                set_security_mode(security_mode == False) 
+                if self.security_mode == True:
+                    reset_security_mode()
 
+            return self.data
+
+    def __restart_collection(self, time, security_mode = True, supervision_mode = True):
+        """This function is used just internally in case that the Recorder has been stopped.
+            It is called by <get_data> to reset the data collection with the 'original'
+            parameters."""
+        self.get_data(time, security_mode, supervision_mode)
 
     def save_data(self, data_file, format, data):
         """

@@ -49,9 +49,6 @@ def make_config(outfile, sample_rate, numof_channels, mode, server = 'localhost'
 
     Optional arguments:
 
-    <shape> : If you chose <mode> 'signs_available' you have the possibility to show signs
-            in the <shape> of 'triangles' or 'quads'.
-
     <server> : Name of the server that is receiving Brain Recorder Data via TCP/IP-Port.
                Usually this is the same computer this software is running on - if this
                is the case, you may skip this arguments, otherwise it has to be specified.
@@ -90,7 +87,6 @@ def make_config(outfile, sample_rate, numof_channels, mode, server = 'localhost'
     config.set('technics', 'resolution', resolution)
 
     config.set('visualization', 'mode', mode)
-    config.set('visualization', 'shape', shape)
 
     config.set('security', 'security_mode', security_mode)
 
