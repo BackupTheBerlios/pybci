@@ -272,12 +272,28 @@ class BCI (object):
             (if saving_mode is switched on) to 'sign' this stopping.
             
         """
-        self.time = time
+        self.time = float(time)
         self.supervision_mode = supervision_mode
         samples_per_second = self.sample_rate   
-        samples_requested = samples_per_second*time
+        samples_requested = samples_per_second*self.time
         blocks_requested = samples_requested/self.numof_samples    # number of blocks (completely 'filled' data arrays) available in the specified time
 
+        if blocks_requested < 1:
+            print 'Warning: There is no data available for returning in this short amount of time.'
+            print 'Set to the least value (%1.4f) by default.' % (float(self.numof_samples)/self.sample_rate)       
+            samples_requested = self.numof_samples
+            blocks_requested = 1
+            self.time = float(self.numof_samples)/self.sample_rate
+
+        elif int(blocks_requested) != blocks_requested:
+            print 'Warning: The specified amount of time does not fit into the structure of the returned data arrays.'
+            blocks_requested = round(blocks_requested, 0)
+            samples_requested = blocks_requested*self.numof_samples
+            self.time = samples_requested/samples_per_second
+            print 'Reading time is changed to %1.4f.' % (self.time) 
+            
+        blocks_requested = int(blocks_requested)
+        
         self.data = N.zeros((self.numof_channels, self.numof_samples*blocks_requested))
 
         if self.security_mode != security_mode:
@@ -295,7 +311,7 @@ class BCI (object):
 
         if supervision_mode:    # two cases to avoid even more loops...
             while self.data_restart == False:
-                print 'Getting data for', time, 'seconds...' 
+                print 'Getting data for', self.time, 'seconds...' 
                 for block in range(blocks_requested):
                     if self.data_restart == False:
                         # get the current datablock for <blocks_requested> times and store it in a new numpy array    
@@ -323,7 +339,7 @@ class BCI (object):
             self.__restart_collection(self.time, security_mode) 
 
         elif supervision_mode == False:
-            print 'Getting data for', time, 'seconds...' 
+            print 'Getting data for', self.time, 'seconds...' 
             for block in range(blocks_requested):   
                 self.data[:,block*self.numof_samples:(block+1)*self.numof_samples] = self.get_datablock()
 
