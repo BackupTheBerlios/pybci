@@ -41,13 +41,13 @@ data_restart = False
 
 class Connect(Thread):
     """This class is used just internally to start the BCI in a separate thread."""
-    def __init__(self, numof_channels, mode, server):
+    def __init__(self, numof_channels, mode, server, level):
         Thread.__init__(self)
 
         if server == 'localhost':
-            start_bci(1, ['localhost'], mode, numof_channels)
+            start_bci(1, ['localhost'], mode, numof_channels, level)
         else:
-            start_bci(2, ['newserver', server], mode, numof_channels)
+            start_bci(2, ['newserver', server], mode, numof_channels, level)
                 
         
 class Sign(Thread):
@@ -84,19 +84,24 @@ class BCI (object):
     def __init__(self, config_file):
         
         # Create configuration parser with defaults
-        config = ConfigParser.RawConfigParser({'server': 'localhost', 'security_mode': False, 'saving_mode': False, 'file': 'Nofile', 'format': 'binary', 'resolution': '0.1'})
+        config = ConfigParser.RawConfigParser({'server': 'localhost', 'security_mode': False, 'saving_mode': False,
+                                               'file': 'Nofile', 'format': 'binary', 'resolution': '0.1', 'speed': '8',
+                                               'size': '5'})
         if config.read(config_file):
 
             self.numof_channels = atoi(config.get('technics', 'numof_channels'))
             self.sample_rate = atoi(config.get('technics', 'sample_rate'))
             self.server = config.get('technics', 'server')
             self.resolution = float(config.get('technics', 'resolution'))
+            self.returning_speed = atoi(config.get('technics', 'speed'))
             self.mode = config.get('visualization', 'mode')
+            self.trigger_size = float(config.get('visualization', 'size'))
 
             if config.has_section('data'):
                 self.saving_mode = config.getboolean('data', 'saving_mode')
                 self.data_file = config.get('data', 'file')
                 self.format = config.get('data', 'format')
+                
             else:
                 self.saving_mode = config._defaults['saving_mode']
                 self.data_file = config._defaults['file']
@@ -110,6 +115,7 @@ class BCI (object):
             print 'Configuration file', config_file, 'read.'
             print 'Sample rate:', self.sample_rate, 'Hz.'
             print 'Data is read from', self.numof_channels, 'channels.'
+            print 'Returning speed is set on level', self.returning_speed, '.'
             print 'Brain Recorder resolution is', self.resolution, 'microvolt.'
             print
             
@@ -141,9 +147,14 @@ class BCI (object):
             self.saving_mode = False 
         
         if self.mode == 'signs_enabled':
-            print 'Sign mode enabled.'
+            print 'Sign mode enabled. Trigger size is', self.trigger_size,'.'
             self.mode = 1
             self.shape = {1:1, 'triangle':1, 2:2, 'quads':2}
+            set_trigger_size(self.trigger_size)
+
+            self.sign = Sign(self.shape)   # start signing mode in a separate thread
+            self.sign.start()
+        
         elif self.mode == 'signs_disabled':
             print 'Sign mode disabled.'
             self.mode = 2
@@ -151,9 +162,8 @@ class BCI (object):
             print 'Warning: This mode is not available. Switched to "signs_disabled".'
             self.mode = 2
 
-        connect = Connect(self.numof_channels, self.mode, self.server)   # start BCI in a seperate thread
-        self.sign = Sign(self.shape)   # start signing mode in a seperate thread
-        self.sign.start()
+        connect = Connect(self.numof_channels, self.mode, self.server, self.returning_speed)   # start BCI in a separate thread
+
         self.blocksize = get_blocksize()    # number of samples in one data block sent by Brain Recorder
         self.numof_samples = get_numof_samples()    # number of samples in one data storing array
 
@@ -184,6 +194,12 @@ class BCI (object):
            That may be useful if you want to be sure not to miss samples/data blocks or to avoid
            reading blocks twice. See also class documentation and usage.py"""
         set_security_mode(mode)
+
+    def set_security_mode(self, size):
+        """Sets the size of a shown trigger - values in the range between 1 and 10 (decimal) are
+            possible."""
+        set_trigger_size(size)
+        
 
     def set_returning_speed(self, level):
         """Resets the returning speed of data arrays. The most likely reason you want to use

@@ -83,11 +83,14 @@ class tcp
 	private:
 		/* connection to TCP/IP-Port is established, socket is initialized. local host is assumed if no argument is specified (this part of the script
 		has been inherited from Brain Vision). Called by class constructor.*/
-		void connect_tcp(int argc, char** argv); 
+		void connect_tcp(int argc, char** argv);
+
+		/* Sets the initial speed level value. Called by class constructor. */
+	    void init_returning_speed(signed int level);
 
 	public:
 		/* Constructor is started by <start_bci>. Starts the connection to the server, preparing, and the reading and signing (if specified) threads. */ 		
-		tcp(int argc, char** argv, unsigned int mode, unsigned int channum);
+		tcp(int argc, char** argv, unsigned int mode, unsigned int channum, signed int level);
 
 		~tcp(void)
 		{
@@ -110,9 +113,11 @@ class tcp
 
 	/* Function to start bci externally. Has to be called in an seperate thread. Parameters are the name of the server
 	(if the software is not running on the same computer that is receiving the data; otherwise skip.), sign mode (0 or SIGNS_UNAVAILABLE
-	if no signs are to be shown and 1 or SIGNS_AVAILABLE if you want to trigger signs (see sign documentation) and number of channels to evaluate
-	(channel labels are by default from 1 to <numof_channels>-1, eog channel is <numof_channels>; use <change_channellabels> to change that). */
-	extern "C" __declspec(dllexport) void start_bci (int argc, char** argv, unsigned int mode, unsigned int channum);
+	if no signs are to be shown and 1 or SIGNS_AVAILABLE if you want to trigger signs (see sign documentation), number of channels to evaluate
+	(channel labels are by default from 1 to <numof_channels>-1, eog channel is <numof_channels>; use <change_channellabels> to change that)
+	and speed of returning arrays (from -9 (very slow) to 9 (very fast) , with possible exceptions of level
+	-10 (slowest level that is possible) and 10 (as fast as possible)). */
+	extern "C" __declspec(dllexport) void start_bci (int argc, char** argv, unsigned int mode, unsigned int channum, signed int level);
 
 	/* Function to be calles externally to end bci, close the server connection and delete allocated memory. */
 	extern "C" __declspec(dllexport) void end_bci(void);

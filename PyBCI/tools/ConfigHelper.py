@@ -32,7 +32,8 @@ import ConfigParser
 """This module may help you to create a configuration file for the BCI.
 Herefore you should use the function 'make_config'. See its documentation for usage."""
 
-def make_config(outfile, sample_rate, numof_channels, mode, server = 'localhost', shape = 'None', security_mode = False, saving_mode = False, data_file = 'Nofile', format = 'binary', resolution = 0.1):
+def make_config(outfile, sample_rate, numof_channels, mode, server = 'localhost', shape = 'None', trigger_size = 5,
+                security_mode = False, saving_mode = False, data_file = 'Nofile', format = 'binary', resolution = 0.1):
     """This is function to create a BCI configuration file automatically.
         You should call it with the following arguments:
 
@@ -54,7 +55,16 @@ def make_config(outfile, sample_rate, numof_channels, mode, server = 'localhost'
                is the case, you may skip this arguments, otherwise it has to be specified.
 
     <resolution> : Resolution, that is declared in the Brain Recorder (usually either 0.1 (default)
-                   or 10). This is used for conversion to microvolt. 
+                   or 10). This is used for conversion to microvolt.
+
+    <trigger_size>: Size of the trigger if mode is 'signs_enabled'.
+                    The range from 1 to 10 (decimal) is possible.
+
+    <returning_speed> : Returning speed of data arrays. Speed levels from -9 (very slow) to 9 (very fast)
+                        are possible (default is 8), with possible exceptions of level -10
+                        (slowest level that is possible) and 10 (as fast as possible).
+                        If you are dependent on receiving the data as fast as possible,
+                        you should choose a high level.
 
     <security_mode> : If True (False is default), a warning is raised if the number of returned
                        blocks is not equal to the read ones. That may be useful if you want
@@ -85,8 +95,10 @@ def make_config(outfile, sample_rate, numof_channels, mode, server = 'localhost'
     config.set('technics', 'numof_channels', numof_channels)
     config.set('technics', 'server', server)
     config.set('technics', 'resolution', resolution)
+    config.set('technics', 'speed', returning_speed)
 
     config.set('visualization', 'mode', mode)
+    config.set('visualization', 'size', trigger_size)
 
     config.set('security', 'security_mode', security_mode)
 
@@ -94,6 +106,6 @@ def make_config(outfile, sample_rate, numof_channels, mode, server = 'localhost'
     config.set('data', 'file', data_file)
     config.set('data', 'format', format)
 
-    config_file = open(outfile, 'wb')
+    config_file = open(outfile, 'w+')
 
     config.write(config_file)

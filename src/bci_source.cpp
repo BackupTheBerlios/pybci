@@ -107,7 +107,7 @@ int d2i(double d) /* just a little rounding function */
 }
 
 
-tcp::tcp(int argc, char** argv, unsigned int mode, unsigned int numchan)
+tcp::tcp(int argc, char** argv, unsigned int mode, unsigned int numchan, signed int level)
 {
 	#ifdef BINOUT
 		binoutfile = fopen(BINOUT,"wb");
@@ -126,7 +126,7 @@ tcp::tcp(int argc, char** argv, unsigned int mode, unsigned int numchan)
 
 	eog_channel = numof_channels;
 
-	numof_samples = 10; /* default */
+	init_returning_speed(level);
 
 	if (numof_channels >=2)
 	{
@@ -663,9 +663,9 @@ int GetServerMessage(SOCKET socket, RDA_MessageHeader** ppHeader)
 
 
 
-void start_bci(int argc, char** argv, unsigned int mode, unsigned int numchan)
+void start_bci(int argc, char** argv, unsigned int mode, unsigned int numchan, signed int level)
 {
-	tcp data(argc, argv, mode, numchan); 
+	tcp data(argc, argv, mode, numchan, level); 
 }
 
 
@@ -695,6 +695,32 @@ void reset_security_mode()
 {
 	reset_counter = true;
 }
+
+void tcp::init_returning_speed(signed int level)
+{
+	/* setting speed... */
+	if (level == -10)  /* very slow level */
+	{
+		numof_samples = 300;
+	}
+
+	else if (level == 10) /* as fast as its possible */
+	{
+		numof_samples = points;
+	}
+
+	else if (-9 <= level && level <= 9)
+	{	
+	level = 10*level;   /* now values from -90 to 90 possible */
+	numof_samples = 100-level; 
+	}
+
+	else
+	{
+		printf("Error: This speed level is not available. Current number of samples in one data array - %i - is retained.\n", numof_samples);
+	}
+}
+
 
 
 void change_channellabels(unsigned int channel, unsigned int label, bool restart)

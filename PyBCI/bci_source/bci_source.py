@@ -73,13 +73,15 @@ except AttributeError:
 
 def start_bci(*args):
   """
-    start_bci (int argc, char** argv, unsigned int mode, unsigned int channum)
+    start_bci (int argc, char** argv, unsigned int mode, unsigned int channum, signed int level)
 
     Function to start bci. Has to be called in an seperate thread. Parameters are the name of the server
     (if the software is not running on the same computer that is receiving the data; otherwise skip.),
     sign mode (0 or SIGNS_UNAVAILABLE if no signs are to be shown and 1 or SIGNS_AVAILABLE if you want to trigger signs
-    (see sign documentation) and number of channels to evaluate (channel labels are by default from 1 to <numof_channels>-1,
-     eog channel is <numof_channels>; use <change_channellabels> to change that). 
+    (see sign documentation), number of channels to evaluate (channel labels are by default from 1 to <numof_channels>-1,
+     eog channel is <numof_channels>; use <change_channellabels> to change that) and speed of returning arrays
+    (from -9 (very slow) to 9 (very fast) , with possible exceptions of level
+    -10 (slowest level that is possible) and 10 (as fast as possible)).  
 
 
     """
@@ -207,5 +209,14 @@ def change_channellabels(*args):
 
     """
   return _bci_source.change_channellabels(*args)
+
+def set_trigger_size(*args):
+  """
+    set_trigger_size(double size);
+
+    Sets the size of the trigger that is shown by :cfunc:`give_sign`. The range from 1 to 10 is possible.
+
+    """
+  return _bci_source.set_trigger_size(*args)
 
 

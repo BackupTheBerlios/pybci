@@ -35,9 +35,10 @@ BOOL bShowMessageBox;
 HWND hParentWnd;
 
 int sign_window;
-int sign_colors[2][3];
+int sign_colors[3][3];
 unsigned int color; /* color of the sign */
 unsigned int shape; /* shape of the sign */
+double trigger_size = 0.5; /* size of the sign */
 
 bool glut_initialized = false; /* to avoid initializing a second time */
 
@@ -46,13 +47,16 @@ void init()
 	sign_colors[0][0] = 0; /* black rgb */
 	sign_colors[0][1] = 0;
 	sign_colors[0][2] = 0;
-	sign_colors[1][0] = 1; /* white rgb */
-	sign_colors[1][1] = 1;
-	sign_colors[1][2] = 1;
+	sign_colors[1][0] = 255; /* white rgb */
+	sign_colors[1][1] = 255;
+	sign_colors[1][2] = 255;
+	sign_colors[2][0] = 153; /* grey rgb */
+	sign_colors[2][1] = 153;
+	sign_colors[2][2] = 153;
 
 	shape = NOSHAPE;
 
-	glClearColor(1.0f, 1.0f, 1.0f, 0.0f); /* white background */
+	glClearColor(0.6f, 0.6f, 0.6f, 0.6f); /* grey background */
 
 	glClearDepth(1.0f); 
 
@@ -90,6 +94,7 @@ DWORD WINAPI sign(LPVOID param)
 	
 		glutInitWindowPosition(pParam->window_position_x, pParam->window_position_y);
 		glutInitWindowSize(pParam->window_size_x, pParam->window_size_y);
+
 	}
 
 	sign_window = glutCreateWindow("Sign Window");
@@ -103,7 +108,7 @@ DWORD WINAPI sign(LPVOID param)
 	}
 	else 
 	{
-		glClearColor(1.0f, 1.0f, 1.0f, 0.0f); /* white background */
+		glClearColor(0.6f, 0.6f, 0.6f, 0.6f); /* white background */
 
 		glClearDepth(1.0f); 
 
@@ -126,26 +131,26 @@ void display()
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); /* clear buffer */
 	glLoadIdentity(); /* reset drawer */	
 
-	glColor3f(sign_colors[color][0], sign_colors[color][1], sign_colors[color][2]);
-	
+	glColor3f((GLfloat)sign_colors[color][0]/255, (GLfloat)sign_colors[color][1]/255, (GLfloat)sign_colors[color][2]/255);
+
 	glTranslatef(0.0f, 0.0f, -15.0f); 
 	
 	if (shape == TRIANGLES)
 	{
 		glBegin(GL_TRIANGLES);
-		glVertex3f( 0.0f, 0.2f, 0.0f); /* up */  
-		glVertex3f(-0.2f,-0.2f, 0.0f); /* bottom left */  
-		glVertex3f( 0.2f,-0.2f, 0.0f); /* bottom right */  
+		glVertex3f( 0.0f, trigger_size, 0.0f); /* up */  
+		glVertex3f(-trigger_size,-trigger_size, 0.0f); /* bottom left */  
+		glVertex3f( trigger_size,-trigger_size, 0.0f); /* bottom right */  
 		glEnd();
 	}
 
 	else if (shape == QUADS)
 	{
 		glBegin(GL_QUADS);
-		glVertex3f( 0.2f, 0.2f, 0.0f); /* up right */
-		glVertex3f(-0.2f, 0.2f, 0.0f); /* up left */
-		glVertex3f(-0.2f,-0.2f, 0.0f); /* bottom left */  
-		glVertex3f( 0.2f,-0.2f, 0.0f); /* bottom right */ 
+		glVertex3f( trigger_size, trigger_size, 0.0f); /* up right */
+		glVertex3f(-trigger_size, trigger_size, 0.0f); /* up left */
+		glVertex3f(-trigger_size, -trigger_size, 0.0f); /* bottom left */  
+		glVertex3f( trigger_size, -trigger_size, 0.0f); /* bottom right */ 
 		glEnd();
 	}
 
@@ -169,7 +174,12 @@ void give_sign(int form, unsigned long time)
 
 	Sleep(time);
 
-	color = 1; /* white */
+	color = 2; /* grey */
 	glutSetWindow(sign_window); 
 	glutPostRedisplay();
+}
+
+void set_trigger_size(double size)
+{
+	trigger_size = size/10; /* change the value from 1...10 to 0.1...1 */
 }

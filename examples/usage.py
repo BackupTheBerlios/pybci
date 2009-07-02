@@ -46,15 +46,22 @@ resolution = 0.1  # ...and a signal resolution of 0.1 microvolt in our Brain Rec
 # We want to get data from...
 numof_channels = 10 # ...channels...
 
+# ...with a pretty high speed...
+returning_speed = 8
 
-# ...and to be able to show signs in a separate window.
+# ...and to be able to show signs in a separate window...
 mode = 'signs_enabled'
+trigger_size = 3.0 # ...with a pretty small trigger
 
 
 # Additionally, we want to write the data into a binary file.
 
 # Thus, we create a configuration file to save our parameters.
-make_config('BCI.cfg', sample_rate = sample_rate, numof_channels = numof_channels, mode = mode, saving_mode = True, data_file = 'example_file.dat', format = 'binary', resolution = resolution)
+make_config('BCI.cfg', sample_rate = sample_rate, numof_channels = numof_channels,
+            mode = mode, trigger_size = trigger_size, saving_mode = True,
+            data_file = 'example_file.dat',
+            format = 'binary', resolution = resolution,
+            returning_speed = returning_speed)
 
 
 
@@ -105,7 +112,8 @@ example_blockfile.close()     # In this case we have to close the file manually.
 
 
 # Now let's get a bit more data. Therefore...
-example_bci.trigger_sign('triangle', 500)   # ...we show a sign for 500 ms, this time by a triangle...
+example_bci.set_trigger_size(7.0)   # ...we choose a larger trigger...
+example_bci.trigger_sign('triangle', 500)   # ...and show a sign for 500 ms, this time by a triangle...
 
 # ...and request data for the next 10 seconds, with a <security_mode>, that gives us a warning if the number
 # of returned blocks is not equal to the read (that is, 'incoming') ones.

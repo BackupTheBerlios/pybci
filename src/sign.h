@@ -50,8 +50,11 @@ typedef struct
 void init (void);
 void display (void);
 
-/* triggers a sign on a white background for the time <time> (milliseconds) in the shape <form> (1 or TRIANGLES for triangles, 2 or QUADS for quads). When the sign is shown a trigger ('5') is sended via the parallel port (using <outport>). */
+/* Triggers a sign on a white background for the time <time> (milliseconds) in the shape <form> (1 or TRIANGLES for triangles, 2 or QUADS for quads). When the sign is shown a trigger ('5') is sended via the parallel port (using <outport>). */
 extern "C" __declspec(dllexport) void give_sign(int form, unsigned long time);
+
+/* Sets the size of the trigger that is shown by :cfunc:`give_sign`. The range from 1 to 10 is possible. */ 
+extern "C" __declspec(dllexport) void set_trigger_size(double size);
 
 /* if trigger mode is SIGNS_AVAILABLE this function is called by bci_source.cpp to create a parallel thread to give signs as blinking shapes (triangles or quads) for a specified time by <give_sign> */
 DWORD WINAPI sign(LPVOID param);
