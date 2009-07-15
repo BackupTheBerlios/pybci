@@ -32,8 +32,11 @@ import ConfigParser
 """This module may help you to create a configuration file for the BCI.
 Herefore you should use the function 'make_config'. See its documentation for usage."""
 
-def make_config(outfile, sample_rate, numof_channels, mode, server = 'localhost', shape = 'None', trigger_size = 5,
-                security_mode = False, saving_mode = False, data_file = 'Nofile', format = 'binary', resolution = 0.1):
+def make_config(outfile, sample_rate, numof_channels, mode, server = 'localhost', shape = 'None',
+                security_mode = False, saving_mode = False, data_file = 'Nofile', format = 'binary',
+                resolution = 0.1, returning_speed = 8,
+                color_bg = 'white', color_trigger = 'black',
+                size_window = (1000, 800)):
     """This is function to create a BCI configuration file automatically.
         You should call it with the following arguments:
 
@@ -57,9 +60,6 @@ def make_config(outfile, sample_rate, numof_channels, mode, server = 'localhost'
     <resolution> : Resolution, that is declared in the Brain Recorder (usually either 0.1 (default)
                    or 10). This is used for conversion to microvolt.
 
-    <trigger_size>: Size of the trigger if mode is 'signs_enabled'.
-                    The range from 1 to 10 (decimal) is possible.
-
     <returning_speed> : Returning speed of data arrays. Speed levels from -9 (very slow) to 9 (very fast)
                         are possible (default is 8), with possible exceptions of level -10
                         (slowest level that is possible) and 10 (as fast as possible).
@@ -78,8 +78,14 @@ def make_config(outfile, sample_rate, numof_channels, mode, server = 'localhost'
 
     <data_file> : The file the data is written in when <saving_mode> is True.
 
-    <format>: The file format the data is written in when <saving_mode> is True.
+    <format> : The file format the data is written in when <saving_mode> is True.
             Possible <format>s are 'plain'(ascii txt), 'pickle', 'binary' and 'mat' (MATLAB-file).
+
+    <color_bg>: Background color of the signing window.
+
+    <color_trigger> : Color of the sign, that is given.
+
+    <size_window> : Size of the signing window as a tuple <width>, <heigth> in pixels.
 
     """
 
@@ -98,7 +104,9 @@ def make_config(outfile, sample_rate, numof_channels, mode, server = 'localhost'
     config.set('technics', 'speed', returning_speed)
 
     config.set('visualization', 'mode', mode)
-    config.set('visualization', 'size', trigger_size)
+    config.set('visualization', 'color_bg', color_bg)
+    config.set('visualization', 'color_trigger', color_trigger)
+    config.set('visualization', 'size_window', size_window)
 
     config.set('security', 'security_mode', security_mode)
 

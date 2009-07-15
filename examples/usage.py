@@ -49,19 +49,23 @@ numof_channels = 10 # ...channels...
 # ...with a pretty high speed...
 returning_speed = 8
 
-# ...and to be able to show signs in a separate window...
+# ...and to be able to show black signs in a separate window with the size 1000*800 pixels...
 mode = 'signs_enabled'
-trigger_size = 3.0 # ...with a pretty small trigger
+color_trigger = 'black'
+size_window = (1000,800)
+color_bg = 'grey' # ...on a grey background.
 
 
 # Additionally, we want to write the data into a binary file.
 
 # Thus, we create a configuration file to save our parameters.
 make_config('BCI.cfg', sample_rate = sample_rate, numof_channels = numof_channels,
-            mode = mode, trigger_size = trigger_size, saving_mode = True,
+            mode = mode, saving_mode = True,
             data_file = 'example_file.dat',
             format = 'binary', resolution = resolution,
-            returning_speed = returning_speed)
+            returning_speed = returning_speed,
+            color_bg = color_bg, color_trigger = color_trigger,
+            size_window = size_window)
 
 
 
@@ -89,8 +93,8 @@ time.sleep(2)
 example_bci.set_returning_speed(0)   
 
 
-# We trigger a sign for 300 milliseconds before getting the data by means of a square.
-example_bci.trigger_sign('quads', 300)   
+# We trigger a sign with a size of 100 pixels for 300 milliseconds before getting the data by means of a square.
+example_bci.trigger_sign('quads', 100, 300)   
 
 # At the moment we are just interested in the first (current) data block (made up of <example_bci.numof_samples> 
 # samples for each of the <numof_channels> channels).
@@ -112,8 +116,8 @@ example_blockfile.close()     # In this case we have to close the file manually.
 
 
 # Now let's get a bit more data. Therefore...
-example_bci.set_trigger_size(7.0)   # ...we choose a larger trigger...
-example_bci.trigger_sign('triangle', 500)   # ...and show a sign for 500 ms, this time by a triangle...
+# ...we choose a larger trigger and show a sign for 500 ms, this time by a triangle...
+example_bci.trigger_sign('triangle', 300, 500)   
 
 # ...and request data for the next 10 seconds, with a <security_mode>, that gives us a warning if the number
 # of returned blocks is not equal to the read (that is, 'incoming') ones.

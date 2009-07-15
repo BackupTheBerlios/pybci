@@ -25,10 +25,9 @@ OTHER DEALINGS IN THE SOFTWARE."""
 
 
 
-
-
-import numpy as N
+import numpy
 from bci_source import *
+from sign import *
 from threading import *
 import pickle
 from scipy.io import savemat
@@ -49,21 +48,6 @@ class Connect(Thread):
         else:
             start_bci(2, ['newserver', server], mode, numof_channels, level)
                 
-        
-class Sign(Thread):
-    """This class is used just internally to start a new thread for giving signs."""
-    def __init__(self, shape):
-        Thread.__init__(self)
-        self.shape = shape
-        self.shape_toshow = 1
-        self.time = 1
-        self.sign = Event()
-
-    def run(self):
-        while(True):
-            self.sign.wait()
-            give_sign(self.shape.get(self.shape_toshow, 1), self.time)
-            self.sign.clear()
 
     
 class BCI (object):
@@ -86,7 +70,7 @@ class BCI (object):
         # Create configuration parser with defaults
         config = ConfigParser.RawConfigParser({'server': 'localhost', 'security_mode': False, 'saving_mode': False,
                                                'file': 'Nofile', 'format': 'binary', 'resolution': '0.1', 'speed': '8',
-                                               'size': '5'})
+                                               'color_bg': 'grey', 'color_trigger': 'black', 'size_window': '(1000,800)'})
         if config.read(config_file):
 
             self.numof_channels = atoi(config.get('technics', 'numof_channels'))
@@ -95,7 +79,9 @@ class BCI (object):
             self.resolution = float(config.get('technics', 'resolution'))
             self.returning_speed = atoi(config.get('technics', 'speed'))
             self.mode = config.get('visualization', 'mode')
-            self.trigger_size = float(config.get('visualization', 'size'))
+            self.color_bg = config.get('visualization', 'color_bg')
+            self.color_trigger = config.get('visualization', 'color_trigger')
+            self.size_window = eval(config.get('visualization', 'size_window'))
 
             if config.has_section('data'):
                 self.saving_mode = config.getboolean('data', 'saving_mode')
@@ -144,15 +130,23 @@ class BCI (object):
                     
         elif self.saving_mode != False:
             print 'Warning: This saving mode is not available. Set to "False" by default.'
-            self.saving_mode = False 
-        
-        if self.mode == 'signs_enabled':
-            print 'Sign mode enabled. Trigger size is', self.trigger_size,'.'
-            self.mode = 1
-            self.shape = {1:1, 'triangle':1, 2:2, 'quads':2}
-            set_trigger_size(self.trigger_size)
+            self.saving_mode = False
 
-            self.sign = Sign(self.shape)   # start signing mode in a separate thread
+        if self.mode == 'signs_enabled':
+            print 'Sign mode enabled.'
+            self.mode = 3
+            self.shape = {1:1, 'triangle':1, 2:2, 'square':2}
+
+            self.sign = Sign(self.size_window[0], self.size_window[1], self.color_bg, self.color_trigger)
+            self.sign.start()            
+        
+        elif self.mode == 'signs_enabled_c':
+            print 'C++ sign mode enabled. Trigger size is', self.trigger_size,'.'
+            self.mode = 1
+            self.shape = {1:1, 'triangle':1, 2:2, 'square':2}
+            set_trigger_size(5)
+
+            self.sign = Sign_c(self.shape)   # start signing mode in a separate thread
             self.sign.start()
         
         elif self.mode == 'signs_disabled':
@@ -167,19 +161,29 @@ class BCI (object):
         self.blocksize = get_blocksize()    # number of samples in one data block sent by Brain Recorder
         self.numof_samples = get_numof_samples()    # number of samples in one data storing array
 
-    def trigger_sign(self, shape, time):
+    def trigger_sign(self, shape, trigger_size, time):
         """
-        If <mode> is 'signs_enabled' you may use this function to give a sign in a seperate
+        You may use this function to give a sign in a seperate
         window with the shape <shape>. It is shown for <time> milliseconds.
 
         Possible values for <shape> are
         1 or 'triangle' for a triangular shape   or
-        2 or 'quads' for a quadratic shape,
+        2 or 'square' for a quadratic shape,
         with 'triangle' as a default if the *shape* you specify is invalid.
+
+        If <mode> is 'signs_enabled', the <trigger_size> is specified in
+        pixels. If it is 'signs_enables_c', you just have to declare any
+        arbitrary number - in this <mode> you have to change the trigger
+        size by calling <set_trigger_size>.
         """
-        self.sign.shape_toshow = shape
-        self.sign.time = time
-        self.sign.sign.set()
+        if self.mode == 3:
+            self.sign._give_sign(self.shape[shape], trigger_size, time)
+            
+        elif self.mode == 1:
+            self.sign.shape_toshow = shape
+            self.sign.time = time
+            self.sign.sign.set()
+                   
 
     def reset_security_mode(self):
         """Resets the counters for read and returned data arrays. This may be useful if you do
@@ -195,11 +199,11 @@ class BCI (object):
            reading blocks twice. See also class documentation and usage.py"""
         set_security_mode(mode)
 
-    def set_security_mode(self, size):
+    def set_trigger_size(self, size):
         """Sets the size of a shown trigger - values in the range between 1 and 10 (decimal) are
             possible."""
         set_trigger_size(size)
-        
+       
 
     def set_returning_speed(self, level):
         """Resets the returning speed of data arrays. The most likely reason you want to use
@@ -251,7 +255,7 @@ class BCI (object):
             
             The data is returned in a numpy array [channels][samples].
         """
-        data = N.zeros((self.numof_channels, self.numof_samples))
+        data = numpy.zeros((self.numof_channels, self.numof_samples))
         # returns with 1 if new data available for returning and with 2 if the Recorder has been stopped
         state = demanding_access() 
 
@@ -266,7 +270,7 @@ class BCI (object):
             self.data_restart = True
             if self.saving_mode == True:
                 # print five zeros to sign stopped Recorder in data file
-                    self.save_data(self.data_file, self.format, N.zeros(5))
+                    self.save_data(self.data_file, self.format, numpy.zeros(5))
         
         elif self.supervision_mode == False:
             self.get_datablock()  # just restart waiting for data if restart is not necessary
@@ -310,7 +314,7 @@ class BCI (object):
             
         blocks_requested = int(blocks_requested)
         
-        self.data = N.zeros((self.numof_channels, self.numof_samples*blocks_requested))
+        self.data = numpy.zeros((self.numof_channels, self.numof_samples*blocks_requested))
 
         if self.security_mode != security_mode:
             if security_mode == True:
@@ -387,11 +391,11 @@ class BCI (object):
             Possible <format>s are 'plain'(ascii txt), 'pickle', 'binary' and 'mat' (MATLAB-file).
         """
         if format == 'binary':
-            N.save(data_file, data.T)
+            numpy.save(data_file, data.T)
         elif format == 'pickle':
             pickle.dump(data.T, data_file)
         elif format == 'plain':
-            N.savetxt(data_file, data.T, fmt='%.3f', delimiter='    ')
+            numpy.savetxt(data_file, data.T, fmt='%.3f', delimiter='    ')
         elif format == 'mat':
             savemat(data_file, {'data':data.T})         
         else:
