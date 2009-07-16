@@ -63,6 +63,8 @@ class BCI (object):
        To finally get the data you may use either <get_datablock> (to get just the current block)
        or <get_data> (see its documentation). In any case, the data is returned in a
        numpy array [channels][samples].
+       The order of the channels is the same as you specify in the configuration file (1 to <numof_channels by
+       default).
        
     """
     def __init__(self, config_file):
@@ -83,6 +85,16 @@ class BCI (object):
             self.color_trigger = config.get('visualization', 'color_trigger')
             self.size_window = eval(config.get('visualization', 'size_window'))
 
+            if config.has_option('technics', 'channels'):
+                self.channels = list(eval(config.get('technics', 'channels')))
+                if len(self.channels) != self.numof_channels:
+                    print 'Error: Some channels of the', self.numof_channels, 'channels are not labeled.'
+                    sys.exit(-1)
+            else:
+                self.channels = []
+                for channel in range(self.numof_channels):  # channel default
+                    self.channels[channel] = channel+1
+
             if config.has_section('data'):
                 self.saving_mode = config.getboolean('data', 'saving_mode')
                 self.data_file = config.get('data', 'file')
@@ -101,6 +113,7 @@ class BCI (object):
             print 'Configuration file', config_file, 'read.'
             print 'Sample rate:', self.sample_rate, 'Hz.'
             print 'Data is read from', self.numof_channels, 'channels.'
+            print 'Channel labels are:', self.channels
             print 'Returning speed is set on level', self.returning_speed, '.'
             print 'Brain Recorder resolution is', self.resolution, 'microvolt.'
             print
@@ -221,7 +234,7 @@ class BCI (object):
         set_returning_speed(level)  
         self.numof_samples = get_numof_samples()
 
-    def change_channellabels(self, channel, label, restart):
+    def change_channellabels(self, channel, label):
         """Herewith you are able to relable the channels you want to get data from.
            <channel> is the number of the <numof_channel> channels you have declared creating
             the BCI class, <label> is the matching label for this <channel>.
@@ -229,23 +242,25 @@ class BCI (object):
             Be careful: The channel labels you specify here have to match with
             the !number #! (not the label or the physical channel number)
             that is declared in the Brain Recorder Software.
-            
-            Because of this, an alternative for relabeling channels is just to put
-            the channels you want to 'read' at the beginning of the Recorder Software
-            one below the other. By default the labels are [1, 2, 3 ... <numof_channels]
-            (Note: 'eog' is remarked when relabeling just for future eog evaluations...).
-            
-            You may set <restart> to True if you want to restart.
-            This is not necessary if you want to label more than one channel. """
-        change_channellabels(channel, label, restart)
-
-    def __get_sample(self, n, channel):
+        """
+        if channel <= self.numof_channels and label <= self.numof_channels:
+            print 'Relabeling...'
+            self.channels[channel-1] = label
+            print 'Channel labels are now', self.channels
+        else:
+            print 'Warning: This is not possible. Either the selected channel or the label\
+                  exceeds the number of available channels.'
+    
+    def __get_sample(self, n, channel, lastone):
         """This function is only used internally for security reasons, so the minumum number
            of samples to read at once is one block, using <get_datablock>.
            
            This function returns just the sample <n> for channel <channel> in the
-           current data block."""
-        sample = return_samples(n, channel)
+           current data block.
+
+           <lastone> has to be set to True if this is the last channel that is accessed
+           in the respective data array."""
+        sample = return_samples(n, channel, lastone)
         return sample
     
     def get_datablock(self):
@@ -257,12 +272,16 @@ class BCI (object):
         """
         data = numpy.zeros((self.numof_channels, self.numof_samples))
         # returns with 1 if new data available for returning and with 2 if the Recorder has been stopped
-        state = demanding_access() 
+        state = demanding_access()
 
+        # this has to be set to True the last channel that is accessed in the respective data array
+        lastone = False  
         if state == 1:
-            for channel in range(self.numof_channels):    # for each channel...
+            for counter,channel in zip(range(self.numof_channels), self.channels):    # for each channel...
                 for sample in range(self.numof_samples):   # ...get each sample in the current data array...
-                    data[channel][sample] = self.__get_sample(sample+1, channel+1)
+                    if counter == self.numof_channels-1:
+                        lastone = True  # ...set the counter in the C++ function...
+                    data[counter][sample] = self.__get_sample(sample+1, channel+1, lastone)
                     
             return data*self.resolution   # ...and keep in mind the data resolution...
         
@@ -280,6 +299,8 @@ class BCI (object):
         """
             'Main' function to get data. For the specified <time> (in seconds) data
             is stored and then returned in a numpy array [channels][samples].
+            The order of the channels is the same as you specify in the configuration
+            file (1 to <numof_channels> by default).
             
             If <security_mode> is set to true (this is default), a warning is raised if
             the number of returned blocks is not equal to the read ones.

@@ -45,6 +45,8 @@ resolution = 0.1  # ...and a signal resolution of 0.1 microvolt in our Brain Rec
 
 # We want to get data from...
 numof_channels = 10 # ...channels...
+# with the following positions (number #) within the Brain Recorder...
+channels = [1,2,10,12,5,6,7,8,20,21]
 
 # ...with a pretty high speed...
 returning_speed = 8
@@ -63,7 +65,7 @@ make_config('BCI.cfg', sample_rate = sample_rate, numof_channels = numof_channel
             mode = mode, saving_mode = True,
             data_file = 'example_file.dat',
             format = 'binary', resolution = resolution,
-            returning_speed = returning_speed,
+            returning_speed = returning_speed, channels = channels
             color_bg = color_bg, color_trigger = color_trigger,
             size_window = size_window)
 
@@ -74,12 +76,12 @@ example_bci = BCI('BCI.cfg')
 
 
 # We are not quite satisfied with the channel labels,
-# because the channels we want to 'read' are on positions [1,2,3,4,32,18,11,8,9,10] in the Brain Recorder Software.
-# So we have to relabel channel 5-7.
+# because the channels we want to 'read' are on positions [1,2,3,12,5,10,7,8,20,30] in the Brain Recorder Software.
+# So we have to relabel the channels on position 3, 6 and 10.
 
-example_bci.change_channellabels(5, 32, False)
-example_bci.change_channellabels(6, 18, False)
-example_bci.change_channellabels(7, 11, True) # Let's go on by a restart.
+example_bci.change_channellabels(3, 3)
+example_bci.change_channellabels(6, 10)
+example_bci.change_channellabels(10, 30) 
 
 
 # We want to let the EEG run a bit before we are interested in the data.
@@ -124,6 +126,8 @@ example_bci.trigger_sign('triangle', 300, 500)
 # Also, we are not sure what may happen during these 10 seconds, so we'll switch on the <supervision_mode>
 # (although both modes are switched on by default, anyway) to get the data collection restarted for 10 seconds
 # if the Brain Recorder is stopped while collecting the data.
+# Please note that the order of the channels in the data array is the one the channels are listed
+# in <channels>.
 
 example_data = example_bci.get_data(10, security_mode = True, supervision_mode = True)
 

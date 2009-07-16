@@ -65,8 +65,6 @@ unsigned int sample_rate;
 /* number of channels to read. In the data arrays the data of each available channel (<nChannels>) is stored,
 the labels are specified (for sample returning calling <get_sample>) just for the <numof_channels> channels. */
 unsigned int numof_channels; 
-unsigned int *channels; /* channel labels of the <numof_channels> channels. Has to be the number # in the channel list of the Brain Recorder Software */
-unsigned int eog_channel; /* label eog channel */
 
 unsigned long numof_samples; /* number of samples stored in the data array before returning the data. If this number is very low, there could be speed problems (overflow, overstrained CPU...) */
 
@@ -117,22 +115,7 @@ tcp::tcp(int argc, char** argv, unsigned int mode, unsigned int numchan, signed 
 	
 	numof_channels = numchan;
 
-	channels = new unsigned int [numof_channels];
-
-	for (unsigned int chan=0; chan <= numof_channels-1; chan++)
-	{
-		channels[chan] = chan+1; /* default: channel label is from 1 to <numof_channels>-1, eog channel is <numof_channels> */
-	}
-
-	eog_channel = numof_channels;
-
 	init_returning_speed(level);
-
-	if (numof_channels >=2)
-	{
-		sort(channels, channels+numof_channels-1); /* sort channel labels */
-	}
-	channels[numof_channels-1] = eog_channel; /* eog channel as the last one in the array */
 
 	for (int e=0; e<=1; e++)
 	{
@@ -197,11 +180,6 @@ void prepare()
 					pMsgStart = (RDA_MessageStart*)pHeader;
 					nChannels = pMsgStart->nChannels; /* detecting number of available channels */
 					printf("%i channels found.\n\n", nChannels);
-					if (channels[numof_channels-1]>nChannels)
-					{
-						printf("Error: Just %i channels found.\n Please restart application.", nChannels);
-						while(1);
-					}
 
 				break;
 
@@ -531,7 +509,7 @@ int demanding_access()
 }
 
 
-short return_samples(unsigned long n, unsigned int channel) 
+short return_samples(unsigned long n, unsigned int channel, bool lastone) 
 {
 	if (channel > nChannels)
 	{
@@ -559,7 +537,7 @@ short return_samples(unsigned long n, unsigned int channel)
 			returned_two = counter_two-1;		
 		}
 		
-		if (n == numof_samples && channel == numof_channels)
+		if (n == numof_samples && lastone == true)
 		{
 			returned_two = returned_two+1; /* whole array has been returned */ 
 		}
@@ -581,7 +559,7 @@ short return_samples(unsigned long n, unsigned int channel)
 			returned_one = counter_one-1;
 		}
 
-		if (n == numof_samples && channel == numof_channels)
+		if (n == numof_samples && lastone == true)
 		{
 			returned_one = returned_one+1; 
 		}
@@ -685,6 +663,7 @@ unsigned long get_numof_samples()
 	return numof_samples;
 }
 
+
 void set_security_mode (bool mode)
 {
 	security_mode = mode;
@@ -721,79 +700,6 @@ void tcp::init_returning_speed(signed int level)
 	}
 }
 
-
-
-void change_channellabels(unsigned int channel, unsigned int label, bool restart)
-{
-	printf("\nRelabeling channel %i...\n", channel);
-
-	if (reading == true)
-	{
-		reading = false;
-
-		WaitForSingleObject(reading_stopped, INFINITE); /* finish reading the current data block */
-
-		if (recorder_stopped != true)  /* not necessary if Recorder already stopped */
-		{
-			printf("\nPlease stop Brain Recorder.\n");
-
-			pHeader = NULL;
-			nResult = GetServerMessage(hSocket, &pHeader); 
-
-			while (pHeader->nType != 3) /* check if Recorder has been stopped */
-			{
-				GetServerMessage(hSocket, &pHeader);
-			}
-		}
-	}
-
-	if (channel >= numof_channels+1)
-	{
-		printf("Error: This channel exceeds the number of channels you want to get data from.\n");
-	}
-	else
-	{
-		channels[channel-1] = label;
-	}
-	
-	printf("channel labels:\n");
-	for (unsigned int c=0; c<=numof_channels-2; c++)
-	{
-		printf("%i\t", channels[c]);
-	}
-	printf("eog: %i\n", channels[numof_channels-1]);
-
-	/* ...and restarting. */
-
-	if (restart == true)
-	{
-		printf("\nResetting...\n");
-
-		/* clearing up... */
-		if (array_one != NULL)
-		{
-			delete[] array_one;
-			array_one = NULL;
-		}
-		if (array_two != NULL)
-		{
-			delete[] array_two;
-			array_two = NULL;
-		}
-
-		if (read_h != NULL)
-		{
-			TerminateThread (read_h, status);
-		}
-
-		if (pHeader) free(pHeader);
-
-		printf("Please restart Brain Recorder.\n");
-		prepare();
-
-		read_h = CreateThread(NULL, 0, reading_thread, 0, 0, NULL);
-	}
-}
 
 					
 
@@ -904,11 +810,6 @@ void end_bci()
 		{
 			delete[] array_two;
 			array_two = NULL;
-		}
-		if (channels != NULL)
-		{
-			delete[] channels;
-			channels = NULL;
 		}
 
 		if (read_h != NULL)

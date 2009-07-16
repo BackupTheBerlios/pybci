@@ -173,15 +173,16 @@ Thanks to the improved CPU architecture the speed is set on a pretty fast value 
 void set_returning_speed(signed int level);
 
 
-%feature("autodoc","return_samples(unsigned long n, unsigned int channel);
+%feature("autodoc","return_samples(unsigned long n, unsigned int channel, bool lastone);
 
 Function to be called to get available data. Returns sample <n> from channel number (from 1 to <numof_channels> is possible) <channel>.
- Usually <demanding_access> should be calles first to make sure that there is data available for returning, otherwise it is
+ Usually <demanding_access> should be called first to make sure that there is data available for returning, otherwise it is
   possible that you will get the same samples twice. The maximum value of <n> is <numof_samples> 
-  consider calling <eval_numof_samples> if unsure...). 
+  consider calling <eval_numof_samples> if unsure...).
+  <lastone> has to be set to True if this is the last channel that is accessed in the respective data array. 
 
-") return_samples(unsigned long n, unsigned int channel);
-short return_samples(unsigned long n, unsigned int channel);
+") return_samples(unsigned long n, unsigned int channel, bool lastone);
+short return_samples(unsigned long n, unsigned int channel, bool lastone);
 
 
 
@@ -193,16 +194,6 @@ Triggers a sign on a white background for the time <time> (milliseconds) in the 
 ") give_sign(int form, unsigned long time);
 void give_sign(int form, unsigned long time);
 
-
-%feature("autodoc", "change_channellabels(unsigned int channel, unsigned int label, bool restart);
-
-May be used to specify the channels you want to get data from. The channel labels you specify here have to match with the
- !number #! (not the label or the physical channel number) that is declared in the Brain Recorder Software.
-  Arguments are the <number> of the channel (in your 'local channelarray', that is, the number you have to declare in <get_sample> later on),
-   the matching <label> and <restart> to declare if you want to restart (not necessary if you want to label more than one channel).
-   
-") change_channellabels(unsigned int channel, unsigned int label, bool restart);
-void change_channellabels(unsigned int channel, unsigned int label, bool restart);
 
 
 %feature("autodoc", "set_trigger_size(double size);

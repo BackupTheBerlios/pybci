@@ -175,12 +175,13 @@ def set_returning_speed(*args):
 
 def return_samples(*args):
   """
-    return_samples(unsigned long n, unsigned int channel);
+    return_samples(unsigned long n, unsigned int channel, bool lastone);
 
     Function to be called to get available data. Returns sample <n> from channel number (from 1 to <numof_channels> is possible) <channel>.
-     Usually <demanding_access> should be calles first to make sure that there is data available for returning, otherwise it is
+     Usually <demanding_access> should be called first to make sure that there is data available for returning, otherwise it is
       possible that you will get the same samples twice. The maximum value of <n> is <numof_samples> 
-      consider calling <eval_numof_samples> if unsure...). 
+      consider calling <eval_numof_samples> if unsure...).
+      <lastone> has to be set to True if this is the last channel that is accessed in the respective data array. 
 
 
     """
@@ -196,19 +197,6 @@ def give_sign(*args):
 
     """
   return _bci_source.give_sign(*args)
-
-def change_channellabels(*args):
-  """
-    change_channellabels(unsigned int channel, unsigned int label, bool restart);
-
-    May be used to specify the channels you want to get data from. The channel labels you specify here have to match with the
-     !number #! (not the label or the physical channel number) that is declared in the Brain Recorder Software.
-      Arguments are the <number> of the channel (in your 'local channelarray', that is, the number you have to declare in <get_sample> later on),
-       the matching <label> and <restart> to declare if you want to restart (not necessary if you want to label more than one channel).
-       
-
-    """
-  return _bci_source.change_channellabels(*args)
 
 def set_trigger_size(*args):
   """

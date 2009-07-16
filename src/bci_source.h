@@ -108,8 +108,9 @@ class tcp
 
 	/* Function to be called externally to get available data. Returns sample <n> from channel number (from 1 to <numof_channels> is possible) <channel>.
 	Usually <demanding_access> should be calles first to make sure that there is data available for returning, otherwise it is possible that you will
-	get the same samples twice. The maximum value of <n> is <numof_samples> (consider calling <eval_numof_samples> if unsure...). */ 
-	extern "C" __declspec(dllexport) short return_samples(unsigned long n, unsigned int channel);
+	get the same samples twice. The maximum value of <n> is <numof_samples> (consider calling <eval_numof_samples> if unsure...).
+	<lastone> has to be set to True if this is the last channel that is accessed in the respective data array. */ 
+	extern "C" __declspec(dllexport) short return_samples(unsigned long n, unsigned int channel, bool lastone);
 
 	/* Function to start bci externally. Has to be called in an seperate thread. Parameters are the name of the server
 	(if the software is not running on the same computer that is receiving the data; otherwise skip.), sign mode (0 or SIGNS_UNAVAILABLE
@@ -141,12 +142,6 @@ class tcp
 	you should choose a high level. Thanks to the improved CPU architecture the speed is set on a pretty fast value by default anyway,
 	so increasing the speed is usually not necessary. */
 	extern "C" __declspec(dllexport) void set_returning_speed(signed int level);
-
-	/* May be used from externally to specify the channels you want to get data from. The channel labels you specify here have to match
-	with the !number #! (not the label or the physical channel number) that is declared in the Brain Recorder Software. Arguments are
-	the <number> of the channel (in your 'local channelarray'), the matching <label> and <restart> to declare if you want to restart
-	(not necessary if you want to label more than one channel). */
-	extern "C" __declspec(dllexport) void change_channellabels(unsigned int channel, unsigned int label, bool restart);
 
 
 #endif

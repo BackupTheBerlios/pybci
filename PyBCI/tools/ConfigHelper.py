@@ -34,7 +34,7 @@ Herefore you should use the function 'make_config'. See its documentation for us
 
 def make_config(outfile, sample_rate, numof_channels, mode, server = 'localhost', shape = 'None',
                 security_mode = False, saving_mode = False, data_file = 'Nofile', format = 'binary',
-                resolution = 0.1, returning_speed = 8,
+                resolution = 0.1, returning_speed = 8, channels = 0
                 color_bg = 'white', color_trigger = 'black',
                 size_window = (1000, 800)):
     """This is function to create a BCI configuration file automatically.
@@ -52,6 +52,11 @@ def make_config(outfile, sample_rate, numof_channels, mode, server = 'localhost'
              Then you have the possibility to give signs by calling BCI.trigger_signs(<time>).
 
     Optional arguments:
+
+    <channels> : Labels of the <numof_channels> channels you want to get data
+                 from as a list or tuple. The respective label is the number # in the Brain Recorder.
+                 The default is 1 to <numof_channels>.
+
 
     <server> : Name of the server that is receiving Brain Recorder Data via TCP/IP-Port.
                Usually this is the same computer this software is running on - if this
@@ -102,6 +107,9 @@ def make_config(outfile, sample_rate, numof_channels, mode, server = 'localhost'
     config.set('technics', 'server', server)
     config.set('technics', 'resolution', resolution)
     config.set('technics', 'speed', returning_speed)
+    if channels == 0:
+        channels = range(numof_channels+1)[1:numof_channels+1]
+    config.set('technics', 'channels', channels)
 
     config.set('visualization', 'mode', mode)
     config.set('visualization', 'color_bg', color_bg)

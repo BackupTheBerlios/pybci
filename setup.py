@@ -44,7 +44,7 @@ else:
   config.add_section('system')
 
 setup(  name="PyBCI",
-        version = "0.2",
+        version = "0.3",
         author = "Benedikt Zoefel",
         description = "Python Brain Computer Interface for reading EEG data online, using Brain Vision Recorder",
         packages = ["PyBCI", "PyBCI.bci_source", "PyBCI.tools"],
