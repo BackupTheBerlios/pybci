@@ -536,7 +536,7 @@ short return_samples(unsigned long n, unsigned int channel, bool lastone)
 			printf("Warning: Number of read arrays does not match the number of returned ones.\t%i\t%i\n", counter_two-1, returned_two);
 			returned_two = counter_two-1;		
 		}
-		
+
 		if (n == numof_samples && lastone == true)
 		{
 			returned_two = returned_two+1; /* whole array has been returned */ 

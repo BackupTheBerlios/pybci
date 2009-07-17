@@ -93,7 +93,7 @@ class BCI (object):
             else:
                 self.channels = []
                 for channel in range(self.numof_channels):  # channel default
-                    self.channels[channel] = channel+1
+                    self.channels.append(channel+1)
 
             if config.has_section('data'):
                 self.saving_mode = config.getboolean('data', 'saving_mode')
@@ -281,9 +281,9 @@ class BCI (object):
         if state == 1:
             for counter,channel in zip(range(self.numof_channels), self.channels):    # for each channel...
                 for sample in range(self.numof_samples):   # ...get each sample in the current data array...
-                    if counter == self.numof_channels-1:
+                    if counter == self.numof_channels-1 and sample == self.numof_samples-1:
                         lastone = True  # ...set the counter in the C++ function...
-                    data[counter][sample] = self.__get_sample(sample+1, channel+1, lastone)
+                    data[counter][sample] = self.__get_sample(sample+1, channel, lastone)
                     
             return data*self.resolution   # ...and keep in mind the data resolution...
         
