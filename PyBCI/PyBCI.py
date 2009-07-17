@@ -148,7 +148,7 @@ class BCI (object):
         if self.mode == 'signs_enabled':
             print 'Sign mode enabled.'
             self.mode = 3
-            self.shape = {1:1, 'triangle':1, 2:2, 'square':2}
+            self.shape = {1:1, 'triangle':1, 2:2, 'square':2, 3:3, 'text':3}
 
             self.sign = Sign(self.size_window[0], self.size_window[1], self.color_bg, self.color_trigger)
             self.sign.start()            
@@ -174,14 +174,16 @@ class BCI (object):
         self.blocksize = get_blocksize()    # number of samples in one data block sent by Brain Recorder
         self.numof_samples = get_numof_samples()    # number of samples in one data storing array
 
-    def trigger_sign(self, shape, trigger_size, time):
+    def trigger_sign(self, shape, trigger_size, time, text = 'NoText'):
         """
         You may use this function to give a sign in a seperate
         window with the shape <shape>. It is shown for <time> milliseconds.
 
         Possible values for <shape> are
         1 or 'triangle' for a triangular shape   or
-        2 or 'square' for a quadratic shape,
+        2 or 'square' for a quadratic shape,     or
+        3 or 'text' for text that you can specify as the argument <text>
+        
         with 'triangle' as a default if the *shape* you specify is invalid.
 
         If <mode> is 'signs_enabled', the <trigger_size> is specified in
@@ -190,7 +192,7 @@ class BCI (object):
         size by calling <set_trigger_size>.
         """
         if self.mode == 3:
-            self.sign._give_sign(self.shape[shape], trigger_size, time)
+            self.sign._give_sign(self.shape[shape], trigger_size, time, text)
             
         elif self.mode == 1:
             self.sign.shape_toshow = shape

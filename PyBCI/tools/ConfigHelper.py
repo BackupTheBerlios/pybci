@@ -34,7 +34,7 @@ Herefore you should use the function 'make_config'. See its documentation for us
 
 def make_config(outfile, sample_rate, numof_channels, mode, server = 'localhost', shape = 'None',
                 security_mode = False, saving_mode = False, data_file = 'Nofile', format = 'binary',
-                resolution = 0.1, returning_speed = 8, channels = 0
+                resolution = 0.1, returning_speed = 8, channels = 0,
                 color_bg = 'white', color_trigger = 'black',
                 size_window = (1000, 800)):
     """This is function to create a BCI configuration file automatically.

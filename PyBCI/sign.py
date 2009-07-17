@@ -39,6 +39,7 @@ class Sign(Thread):
         self.size = 0
         self.time = 0
         self.shape = 1
+        self.text = 'NoText'
         self.color_bg = color_bg
         self.color_trigger = color_trigger
          
@@ -59,13 +60,18 @@ class Sign(Thread):
                         self.width_win/2+self.size/2,
                         self.height_win/2+self.size/2,
                         self.width_win/2,
-                        self.height_win/2-self.size/2, fill=self.color_trigger)
+                        self.height_win/2-self.size/2, fill = self.color_trigger)
 
           elif self.shape == 2:
               stimulus = self.canvas.create_rectangle(self.width_win/2-self.size/2,
                         self.height_win/2-self.size/2,
                         self.width_win/2+self.size/2,
-                        self.height_win/2+self.size/2, fill=self.color_trigger)
+                        self.height_win/2+self.size/2, fill = self.color_trigger)
+              
+          elif self.shape == 3:
+              stimulus = self.canvas.create_text(self.width_win/2,
+                        self.height_win/2, justify = CENTER, fill = self.color_trigger,
+                        font = ('TimesNewRoman', self.size), text=self.text)
 
           self.canvas.update()
         
@@ -73,13 +79,14 @@ class Sign(Thread):
 
           self.update.clear()
 
-    def _give_sign(self, shape, trigger_size, time):
+    def _give_sign(self, shape, trigger_size, time, text):
         """
         This function is used just internally to set a trigger event.
         """
         self.shape = shape
         self.size = trigger_size
         self.time = time
+        self.text = text
         self.update.set()
 
 
