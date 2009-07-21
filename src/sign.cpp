@@ -29,6 +29,7 @@ OTHER DEALINGS IN THE SOFTWARE.*/
 
 #define TRIANGLES 1
 #define QUADS 2
+#define FONT 3
 #define NOSHAPE 0 
 
 BOOL bShowMessageBox;
@@ -108,7 +109,7 @@ DWORD WINAPI sign(LPVOID param)
 	}
 	else 
 	{
-		glClearColor(0.6f, 0.6f, 0.6f, 0.6f); /* white background */
+		glClearColor(0.6f, 0.6f, 0.6f, 0.6f); /* grey background */
 
 		glClearDepth(1.0f); 
 
@@ -138,20 +139,26 @@ void display()
 	if (shape == TRIANGLES)
 	{
 		glBegin(GL_TRIANGLES);
-		glVertex3f( 0.0f, trigger_size, 0.0f); /* up */  
-		glVertex3f(-trigger_size,-trigger_size, 0.0f); /* bottom left */  
-		glVertex3f( trigger_size,-trigger_size, 0.0f); /* bottom right */  
+		glVertex3f( 0.0f, trigger_size/10, 0.0f); /* up */  
+		glVertex3f(-trigger_size/10,-trigger_size/10, 0.0f); /* bottom left */  
+		glVertex3f( trigger_size/10,-trigger_size/10, 0.0f); /* bottom right */  
 		glEnd();
 	}
 
 	else if (shape == QUADS)
 	{
 		glBegin(GL_QUADS);
-		glVertex3f( trigger_size, trigger_size, 0.0f); /* up right */
-		glVertex3f(-trigger_size, trigger_size, 0.0f); /* up left */
-		glVertex3f(-trigger_size, -trigger_size, 0.0f); /* bottom left */  
-		glVertex3f( trigger_size, -trigger_size, 0.0f); /* bottom right */ 
+		glVertex3f( trigger_size/10, trigger_size/10, 0.0f); /* up right */
+		glVertex3f(-trigger_size/10, trigger_size/10, 0.0f); /* up left */
+		glVertex3f(-trigger_size/10, -trigger_size/10, 0.0f); /* bottom left */  
+		glVertex3f( trigger_size/10, -trigger_size/10, 0.0f); /* bottom right */ 
 		glEnd();
+	}
+
+	else if (shape == FONT)
+	{
+		glRasterPos3f(0.0f, 0.0f, -15.0f);
+		glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, 'R');
 	}
 
 	else if (shape != NOSHAPE)
@@ -165,10 +172,12 @@ void display()
 }
 
 
-void give_sign(int form, unsigned long time)
+void give_sign(int form, unsigned long time, int size)
 {
 	color = 0; /* black */
 	shape = form;
+    trigger_size = size;
+
 	glutSetWindow(sign_window); 
 	glutPostRedisplay();
 

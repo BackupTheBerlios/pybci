@@ -186,13 +186,13 @@ short return_samples(unsigned long n, unsigned int channel, bool lastone);
 
 
 
-%feature("autodoc", "give_sign(int form, unsigned long time);
+%feature("autodoc", "give_sign(int form, unsigned long time, int size);
 
 Triggers a sign on a white background for the time <time> (milliseconds) in the shape <form> (1 or TRIANGLES for triangles,
  2 or QUADS for quads). When the sign is shown a trigger ('5') is sended via the parallel port (using <outport>).
 
-") give_sign(int form, unsigned long time);
-void give_sign(int form, unsigned long time);
+") give_sign(int form, unsigned long time, int size);
+void give_sign(int form, unsigned long time, int size);
 
 
 

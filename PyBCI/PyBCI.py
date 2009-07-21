@@ -84,6 +84,7 @@ class BCI (object):
             self.color_bg = config.get('visualization', 'color_bg')
             self.color_trigger = config.get('visualization', 'color_trigger')
             self.size_window = eval(config.get('visualization', 'size_window'))
+            self.shape = {1:1, 'triangle':1, 2:2, 'square':2, 3:3, 'text':3}
 
             if config.has_option('technics', 'channels'):
                 self.channels = list(eval(config.get('technics', 'channels')))
@@ -145,21 +146,25 @@ class BCI (object):
             print 'Warning: This saving mode is not available. Set to "False" by default.'
             self.saving_mode = False
 
-        if self.mode == 'signs_enabled':
-            print 'Sign mode enabled.'
+        if self.mode == 'signs_enabled_tk':
+            print 'Tkinter sign mode enabled.'
             self.mode = 3
-            self.shape = {1:1, 'triangle':1, 2:2, 'square':2, 3:3, 'text':3}
 
-            self.sign = Sign(self.size_window[0], self.size_window[1], self.color_bg, self.color_trigger)
+            self.sign = Sign_tk(self.size_window[0], self.size_window[1], self.color_bg, self.color_trigger)
             self.sign.start()            
         
         elif self.mode == 'signs_enabled_c':
-            print 'C++ sign mode enabled. Trigger size is', self.trigger_size,'.'
+            print 'C++ sign mode enabled.'
             self.mode = 1
-            self.shape = {1:1, 'triangle':1, 2:2, 'square':2}
-            set_trigger_size(5)
 
             self.sign = Sign_c(self.shape)   # start signing mode in a separate thread
+            self.sign.start()
+
+        elif self.mode == 'signs_enabled':
+            print 'OpenGL sign mode enabled.'
+            self.mode = 4
+            
+            self.sign = Sign(self.size_window[0], self.size_window[1], self.color_bg, self.color_trigger)
             self.sign.start()
         
         elif self.mode == 'signs_disabled':
@@ -183,21 +188,11 @@ class BCI (object):
         1 or 'triangle' for a triangular shape   or
         2 or 'square' for a quadratic shape,     or
         3 or 'text' for text that you can specify as the argument <text>
+        (text mode is just enabled in the tk mode...)
         
         with 'triangle' as a default if the *shape* you specify is invalid.
-
-        If <mode> is 'signs_enabled', the <trigger_size> is specified in
-        pixels. If it is 'signs_enables_c', you just have to declare any
-        arbitrary number - in this <mode> you have to change the trigger
-        size by calling <set_trigger_size>.
         """
-        if self.mode == 3:
-            self.sign._give_sign(self.shape[shape], trigger_size, time, text)
-            
-        elif self.mode == 1:
-            self.sign.shape_toshow = shape
-            self.sign.time = time
-            self.sign.sign.set()
+        self.sign._give_sign(self.shape[shape], trigger_size, time, text)
                    
 
     def reset_security_mode(self):
@@ -431,6 +426,12 @@ class BCI (object):
             self.data_file.close()
         except:
             pass
+        
+        try:
+            self.sign.glut_initialized = False
+        except:
+            pass
+        
         end_bci()
         
         

@@ -47,8 +47,14 @@ def make_config(outfile, sample_rate, numof_channels, mode, server = 'localhost'
     <numof_channels> : Number of channels you want to get data from. Is not mandatory
                        the number of channels you are getting the data from.
 
-    <mode> : Mode for giving signs in a seperate window. Possible modes are 'signs_enabled'
-             and 'signs_disabled'. If you choose 'signs_enabled' you have to specify the <shape>.
+    <mode> : Mode for giving signs in a seperate window.
+             Possible modes are:
+             'signs_enabled': OpenGL Python signing mode
+             'signs_enabled_c: OpenGL C++ signing mode
+             'signs_enabled_tk: Tkinter signing mode - this is the only signing mode including the possibility
+             to show text signs yet, it may be pretty slow and partly unusuable though.
+             'signs_disabled'.
+             If you enable signs, you have to specify the <shape>.
              Then you have the possibility to give signs by calling BCI.trigger_signs(<time>).
 
     Optional arguments:
