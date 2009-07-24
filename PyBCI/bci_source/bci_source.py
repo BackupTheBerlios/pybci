@@ -189,22 +189,24 @@ def return_samples(*args):
 
 def give_sign(*args):
   """
-    give_sign(int form, unsigned long time);
+    give_sign(int form, int col, unsigned long time, double size, unsigned int texture);
 
-    Triggers a sign on a white background for the time <time> (milliseconds) in the shape <form> (1 or TRIANGLES for triangles,
-     2 or QUADS for quads). When the sign is shown a trigger ('5') is sended via the parallel port (using <outport>).
+    Triggers a sign on a white background for the time <time> (milliseconds) in the shape <form> 
+    (1 or TRIANGLES for triangles, 2 or QUADS for quads, 3 or FONT for text, 4 or BMP for bitmaps).
+     When the sign is shown a trigger ('5') is sended via the parallel port (using <outport>).
 
 
     """
   return _bci_source.give_sign(*args)
 
-def set_trigger_size(*args):
+def set_background_color(*args):
   """
-    set_trigger_size(double size);
+    set_background_color(int color);
 
-    Sets the size of the trigger that is shown by :cfunc:`give_sign`. The range from 1 to 10 is possible.
+    Sets the background color.
+
 
     """
-  return _bci_source.set_trigger_size(*args)
+  return _bci_source.set_background_color(*args)
 
 

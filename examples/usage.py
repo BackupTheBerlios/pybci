@@ -89,14 +89,14 @@ example_bci.change_channellabels(10, 30)
 time.sleep(2)  
 
 
-
 # We have noted that our computer is a bit slow and seems to be overstrained getting data so fast.
 # Because of that, we are going to reduce the returning speed.
 example_bci.set_returning_speed(0)   
 
 
-# We trigger a sign with a size of 100 pixels for 300 milliseconds before getting the data by means of a square.
-example_bci.trigger_sign('quads', 100, 300)   
+# We trigger a sign with the size 0.5 (range from 0 to 1 is possible) for 300 milliseconds
+# before getting the data by means of a square.
+example_bci.trigger_sign('quads', 0.5, 300)   
 
 # At the moment we are just interested in the first (current) data block (made up of <example_bci.numof_samples> 
 # samples for each of the <numof_channels> channels).
@@ -119,7 +119,7 @@ example_blockfile.close()     # In this case we have to close the file manually.
 
 # Now let's get a bit more data. Therefore...
 # ...we choose a larger trigger and show a sign for 500 ms, this time by a triangle...
-example_bci.trigger_sign('triangle', 300, 500)   
+example_bci.trigger_sign('triangle', 0.7, 500)   
 
 # ...and request data for the next 10 seconds, with a <security_mode>, that gives us a warning if the number
 # of returned blocks is not equal to the read (that is, 'incoming') ones.

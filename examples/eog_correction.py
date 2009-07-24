@@ -60,7 +60,7 @@ for num, condition in zip(range(len(conditions)), conditions):
         
         # ...then give a sign by means of a triangle for the beginning of the trial, that is, the data
         # collection...
-        example_bci.trigger_sign('triangle', 200, 300)
+        example_bci.trigger_sign('triangle', 0.5, 300)
 
         # ...and store the data, separated for each trial.
         condition_data[trial] = example_bci.get_data(sec_per_trial)

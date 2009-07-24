@@ -83,34 +83,39 @@ class Sign_tk(Thread):
 
           self.update.clear()
 
-    def _give_sign(self, shape, trigger_size, time, text):
+    def _give_sign(self, shape, trigger_size, time, texture, text):
         """
         This function is used just internally to set a trigger event.
         """
         self.shape = shape
-        self.size = trigger_size
+        self.size = int(trigger_size*1000)
         self.time = time
         self.text = text
         self.update.set()
 
 
-class Sign_c(Thread):
+class Sign(Thread):
     """This class is used just internally to start a new thread for giving signs c++ based."""
-    def __init__(self, shape):
+    def __init__(self, shape, color_bg, color_trigger):
         Thread.__init__(self)
         self.shape = shape
         self.shape_toshow = 1
         self.time = 1
         self.size = 1
+        self.colors = {'black':0, 'white':1, 'grey':2}
+        self.color_bg = self.colors[color_bg]
+        self.color_trigger = self.colors[color_trigger]
         self.sign = Event()
+        set_background_color(self.color_bg)
+        
 
     def run(self):
         while(True):
             self.sign.wait()
-            give_sign(self.shape.get(self.shape_toshow, 1), self.time, self.size)
+            give_sign(self.shape.get(self.shape_toshow, 1), self.color_trigger, self.time, self.size, self.texture)
             self.sign.clear()
 
-    def _give_sign(self, shape, trigger_size, time, text):
+    def _give_sign(self, shape, trigger_size, time, texture, text):
         """
         This function is used just internally to set a trigger event.
         """
@@ -118,10 +123,11 @@ class Sign_c(Thread):
         self.size = trigger_size
         self.time = time
         self.text = text
+        self.texture = texture-1
         self.sign.set()
 
 
-class Sign(Thread):
+class Sign_py(Thread):
     """This class is used just internally to start a new thread for giving signs OpenGL based."""
     def __init__(self, width_win, height_win, color_bg, color_trigger):
         Thread.__init__(self)
@@ -130,24 +136,29 @@ class Sign(Thread):
         self.size = 1
         self.height_win = height_win
         self.width_win = width_win
-        self.colors = {'black':0/255, 'white':255/255, 'grey':150./255}
+        self.colors = {'black':0, 'white':1, 'grey':0.6}
         self.color_bg = color_bg
         self.color_trigger = color_trigger
         self.color_toshow = 'grey'
         self.glut_initialized = False
+        self.fx = 0.1
+        self.fy = 0.1
 
     def run(self):
-        glutInit(0) # initialize glut bibliography 
+        if self.glut_initialized == False:
+            
+            glutInit(0) # initialize glut bibliography 
 
-	# double buffer (creating the graphic 'off-scence' and showing by command), rgba-colors, depth buffer 
-	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH)
+	    # double buffer (creating the graphic 'off-scence' and showing by command), rgba-colors, depth buffer 
+	    glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH)
 	
-	glutInitWindowPosition(100, 100)
-	glutInitWindowSize(self.width_win, self.height_win)
+	    glutInitWindowPosition(100, 100)
+	    glutInitWindowSize(self.width_win, self.height_win)
 
-	self.sign_window = glutCreateWindow("Sign Window")
+	    self.sign_window = glutCreateWindow("Sign Window")
 
 	glutDisplayFunc(self.display)
+	glutReshapeFunc(self._OnResizeWindow)
 
         self.init() # initialize Open GL
 
@@ -186,37 +197,44 @@ class Sign(Thread):
 
 	glColor3f(self.colors[self.color_toshow], self.colors[self.color_toshow], self.colors[self.color_toshow])
 
-	glTranslatef(0.0, 0.0, -15.0) 
-
 	if self.shape_toshow == 1:
 	    glBegin(GL_TRIANGLES)
-	    glVertex3f( 0.0, self.size/10, 0.0) # up   
-	    glVertex3f(-self.size/10, -self.size/10, 0.0) # bottom left   
-	    glVertex3f(self.size/10, -self.size/10, 0.0) # bottom right   
+	    glVertex2f( 0.0, self.size*self.fy) # up   
+	    glVertex2f(-self.size*self.fx, -self.size*self.fy) # bottom left   
+	    glVertex2f(self.size*self.fx, -self.size*self.fy) # bottom right   
 	    glEnd()
 
 	elif self.shape_toshow == 2:
 	    glBegin(GL_QUADS);
-	    glVertex3f( self.size/10, self.size/10, 0.0)   # up right 
-	    glVertex3f(-self.size/10, self.size/10, 0.0)   # up left 
-	    glVertex3f(-self.size/10, -self.size/10, 0.0)  # bottom left   
-	    glVertex3f( self.size/10, -self.size/10, 0.0)  # bottom right  
+	    glVertex2f( self.size*self.fx, self.size*self.fy)   # up right 
+	    glVertex2f(-self.size*self.fx, self.size*self.fy)   # up left 
+	    glVertex2f(-self.size*self.fx, -self.size*self.fy)  # bottom left   
+	    glVertex2f( self.size*self.fx, -self.size*self.fy)  # bottom right  
 	    glEnd()
 
-	elif self.shape_toshow == 3:
-            glRasterPos3f(1, 1, -15)
-            glutBitmapString(GLUT_BITMAP_TIMES_ROMAN_24, self.text)
+	#elif self.shape_toshow == 3:
+        #    glRasterPos3f(0, 0, 0)
+        #    glutBitmapString(GLUT_BITMAP_TIMES_ROMAN_24, self.text)
 
-	glutSwapBuffers() # show graphic (double buffer) 
+        else: pass
+
+	glutSwapBuffers() # show graphic (double buffer)
+
+	time.sleep(self.time)
+	
+	self.shape_toshow = 0
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT) # back to grey
+
+	glutSwapBuffers()
 
 
-    def _give_sign(self, shape, trigger_size, duration, text):
+    def _give_sign(self, shape, trigger_size, duration, texture, text):
         """
         This function is used just internally to set a trigger event.
         """
         self.shape_toshow = shape
         self.size = trigger_size
-        self.time = time
+        self.time = float(duration/1000)
         self.text = text
 
         self.color_toshow = self.color_trigger
@@ -224,12 +242,35 @@ class Sign(Thread):
         glutSetWindow(self.sign_window)
         glutPostRedisplay()
 
-        time.sleep(float(duration)/1000)
-        
-        self.color_toshow = self.color_bg
 
-        glutSetWindow(self.sign_window)
-        glutPostRedisplay()
+    def _OnResizeWindow (self, sx, sy):
+        if sy == 0:
+	    sy = 1
+	if sx == 0:
+	    sx = 1
+
+	glMatrixMode(GL_PROJECTION)
+	glLoadIdentity()
+
+        fmin = min ( sx, sy )
+        fmax = max ( sx, sy )
+
+        fR  = float(fmin)/fmax
+        fR2 = float(fmax)/fmin
+
+        if  sx > sy:
+            gluOrtho2D(-fR2, fR2, -fR, fR)
+            self.fx = 1.0
+            self.fy = fR
+        else:
+            gluOrtho2D(-fR, fR, -fR2, fR2)
+            self.fx = fR
+            self.fy = 1.0
+
+        glViewport(0, 0, sx, sy)
+
+	glMatrixMode(GL_MODELVIEW)
+
 
 
 

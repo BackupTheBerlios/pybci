@@ -84,7 +84,8 @@ class BCI (object):
             self.color_bg = config.get('visualization', 'color_bg')
             self.color_trigger = config.get('visualization', 'color_trigger')
             self.size_window = eval(config.get('visualization', 'size_window'))
-            self.shape = {1:1, 'triangle':1, 2:2, 'square':2, 3:3, 'text':3}
+            self.shape = {1:1, 'triangle':1, 2:2, 'square':2, 3:3, 'text':3, 4:4, 'bmp':4}
+            self.texture = {'R':1, 'L':2, 'r':3, 'l':4}
 
             if config.has_option('technics', 'channels'):
                 self.channels = list(eval(config.get('technics', 'channels')))
@@ -153,18 +154,18 @@ class BCI (object):
             self.sign = Sign_tk(self.size_window[0], self.size_window[1], self.color_bg, self.color_trigger)
             self.sign.start()            
         
-        elif self.mode == 'signs_enabled_c':
+        elif self.mode == 'signs_enabled':
             print 'C++ sign mode enabled.'
             self.mode = 1
 
-            self.sign = Sign_c(self.shape)   # start signing mode in a separate thread
+            self.sign = Sign(self.shape, self.color_bg, self.color_trigger)   # start signing mode in a separate thread
             self.sign.start()
 
-        elif self.mode == 'signs_enabled':
+        elif self.mode == 'signs_enabled_py':
             print 'OpenGL sign mode enabled.'
             self.mode = 4
             
-            self.sign = Sign(self.size_window[0], self.size_window[1], self.color_bg, self.color_trigger)
+            self.sign = Sign_py(self.size_window[0], self.size_window[1], self.color_bg, self.color_trigger)
             self.sign.start()
         
         elif self.mode == 'signs_disabled':
@@ -179,7 +180,7 @@ class BCI (object):
         self.blocksize = get_blocksize()    # number of samples in one data block sent by Brain Recorder
         self.numof_samples = get_numof_samples()    # number of samples in one data storing array
 
-    def trigger_sign(self, shape, trigger_size, time, text = 'NoText'):
+    def trigger_sign(self, shape, trigger_size, time, texture = 'R', text = 'NoText'):
         """
         You may use this function to give a sign in a seperate
         window with the shape <shape>. It is shown for <time> milliseconds.
@@ -188,11 +189,16 @@ class BCI (object):
         1 or 'triangle' for a triangular shape   or
         2 or 'square' for a quadratic shape,     or
         3 or 'text' for text that you can specify as the argument <text>
-        (text mode is just enabled in the tk mode...)
+        (text mode is just enabled in the tk mode...) or
+        4 or 'bmp' to show bitmaps
+        (bmp mode is just enabled in the c mode)
         
         with 'triangle' as a default if the *shape* you specify is invalid.
+
+        Possible values for textures are
+        'R' (default), 'L', 'r' and 'l' on a grey background.
         """
-        self.sign._give_sign(self.shape[shape], trigger_size, time, text)
+        self.sign._give_sign(self.shape[shape], trigger_size, time, self.texture[texture], text)
                    
 
     def reset_security_mode(self):

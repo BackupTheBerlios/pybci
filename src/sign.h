@@ -32,8 +32,13 @@ OTHER DEALINGS IN THE SOFTWARE.*/
 
 #include <windows.h>
 #include <stdio.h>
+#include <string>
+#include <iostream>
 #include "glut.h"
+#include "glaux.h"
 #include "outport.h"
+
+using namespace std;
 
 /* variables for the sign thread - passed by bci.cpp - */
 typedef struct
@@ -50,11 +55,18 @@ typedef struct
 void init (void);
 void display (void);
 
-/* Triggers a sign on a white background for the time <time> (milliseconds) in the shape <form> (1 or TRIANGLES for triangles, 2 or QUADS for quads). When the sign is shown a trigger ('5') is sended via the parallel port (using <outport>). */
-extern "C" __declspec(dllexport) void give_sign(int form, unsigned long time, int size);
+/* Used internally to load BMP image files */
+AUX_RGBImageRec *LoadBMP(char *filename);
 
-/* Sets the size of the trigger that is shown by :cfunc:`give_sign`. The range from 1 to 10 is possible. */ 
-extern "C" __declspec(dllexport) void set_trigger_size(double size);
+/* Load BMP image files and convert to textures */
+int LoadGLTextures(char *filename, unsigned int numof_texture);
+
+/* Triggers a sign on a white background for the time <time> (milliseconds) in the shape <form> 
+(1 or TRIANGLES for triangles, 2 or QUADS for quads, 3 or FONT for text, 4 or BMP for bitmaps).
+When the sign is shown a trigger ('5') is sended via the parallel port (using <outport>). */
+extern "C" __declspec(dllexport) void give_sign(int form, int col, unsigned long time, double size, unsigned int texture);
+
+extern "C" __declspec(dllexport) void set_background_color(int color);
 
 /* if trigger mode is SIGNS_AVAILABLE this function is called by bci_source.cpp to create a parallel thread to give signs as blinking shapes (triangles or quads) for a specified time by <give_sign> */
 DWORD WINAPI sign(LPVOID param);

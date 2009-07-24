@@ -186,18 +186,20 @@ short return_samples(unsigned long n, unsigned int channel, bool lastone);
 
 
 
-%feature("autodoc", "give_sign(int form, unsigned long time, int size);
+%feature("autodoc", "give_sign(int form, int col, unsigned long time, double size, unsigned int texture);
 
-Triggers a sign on a white background for the time <time> (milliseconds) in the shape <form> (1 or TRIANGLES for triangles,
- 2 or QUADS for quads). When the sign is shown a trigger ('5') is sended via the parallel port (using <outport>).
+Triggers a sign on a white background for the time <time> (milliseconds) in the shape <form> 
+(1 or TRIANGLES for triangles, 2 or QUADS for quads, 3 or FONT for text, 4 or BMP for bitmaps).
+ When the sign is shown a trigger ('5') is sended via the parallel port (using <outport>).
 
-") give_sign(int form, unsigned long time, int size);
-void give_sign(int form, unsigned long time, int size);
+") give_sign(int form, int col, unsigned long time, double size, unsigned int texture);
+void give_sign(int form, int col, unsigned long time, double size, unsigned int texture);
 
 
 
-%feature("autodoc", "set_trigger_size(double size);
+%feature("autodoc", "set_background_color(int color);
 
-Sets the size of the trigger that is shown by :cfunc:`give_sign`. The range from 1 to 10 is possible.
-") set_trigger_size(double size);
-void set_trigger_size(double size);
+Sets the background color.
+
+") set_background_color(int color);
+void set_background_color(int color);

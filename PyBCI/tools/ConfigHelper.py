@@ -49,8 +49,9 @@ def make_config(outfile, sample_rate, numof_channels, mode, server = 'localhost'
 
     <mode> : Mode for giving signs in a seperate window.
              Possible modes are:
-             'signs_enabled': OpenGL Python signing mode
-             'signs_enabled_c: OpenGL C++ signing mode
+             'signs_enabled_py': OpenGL Python signing mode
+             'signs_enabled: OpenGL C++ signing mode - this is the only signing mode including the possibility
+             to show bitmap textures yet
              'signs_enabled_tk: Tkinter signing mode - this is the only signing mode including the possibility
              to show text signs yet, it may be pretty slow and partly unusuable though.
              'signs_disabled'.
