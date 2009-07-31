@@ -54,6 +54,7 @@ typedef struct
 
 void init (void);
 void display (void);
+void timer_func (int value); /* function to clear the sign after a specified (<give_sign>) time */ 
 
 /* Used internally to load BMP image files */
 AUX_RGBImageRec *LoadBMP(char *filename);

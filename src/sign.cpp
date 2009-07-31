@@ -172,6 +172,25 @@ DWORD WINAPI sign(LPVOID param)
 		glClearColor(sign_colors[color_bg][0], sign_colors[color_bg][1], sign_colors[color_bg][2], 1); 
 
 		glClearDepth(1.0f); 
+		
+		glEnable(GL_TEXTURE_2D);
+
+		TCHAR path[260]; 
+		string f;
+		GetModuleFileName(NULL, path, 260);
+		f = path;
+		int i = f.find("python.exe");
+	
+		f.replace(i, 100, "Lib\\site-packages\\PyBCI\\bci_source\\data\\images\\R.bmp");
+		LoadGLTextures((char*)f.c_str(), 0);
+		f.replace(i, 100, "Lib\\site-packages\\PyBCI\\bci_source\\data\\images\\L.bmp");
+		LoadGLTextures((char*)f.c_str(), 1);
+		f.replace(i, 100, "Lib\\site-packages\\PyBCI\\bci_source\\data\\images\\sr.bmp");
+		LoadGLTextures((char*)f.c_str(), 2);
+		f.replace(i, 100, "Lib\\site-packages\\PyBCI\\bci_source\\data\\images\\sl.bmp");
+		LoadGLTextures((char*)f.c_str(), 3);
+		f.replace(i, 100, "Lib\\site-packages\\PyBCI\\bci_source\\data\\images\\grey.bmp");
+		LoadGLTextures((char*)f.c_str(), 4);
 	}
 
 	glutMainLoop(); /* calls display function if necessary */
@@ -236,12 +255,6 @@ void display()
 	Out32(TRIGGER_PORT, 5); /* send trigger when sign is shown */
 	
 	glutSwapBuffers(); /* show graphic (double buffer) */
-
-	Sleep(trigger_time);
-	shape = NOSHAPE;
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); /* back to grey */
-
-	glutSwapBuffers(); 
 }
 
 
@@ -253,7 +266,15 @@ void give_sign(int form, int col, unsigned long time, double size, unsigned int 
 	trigger_time = time;
 	numof_texture = texture;
 
-	glutSetWindow(sign_window); 
+	glutSetWindow(sign_window);
+	glutPostRedisplay();
+	glutTimerFunc(trigger_time, timer_func, 0);
+}
+
+
+void timer_func(int value)
+{
+	shape = NOSHAPE;
 	glutPostRedisplay();
 }
 
