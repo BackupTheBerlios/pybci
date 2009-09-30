@@ -47,6 +47,7 @@ unsigned int numof_textures = 5; /* number of the implemented textures for BMP m
 GLuint textures[5];			/* storage for the textures */
 unsigned int numof_texture = 4; /* number of the current texture */
 
+bool timer = false; /* true if timer is set */
 bool glut_initialized = false; /* to avoid initializing a second time */
 
 /* size transformation variables to keep the trigger size constant relative to the window size */
@@ -268,7 +269,11 @@ void give_sign(int form, int col, unsigned long time, double size, unsigned int 
 
 	glutSetWindow(sign_window);
 	glutPostRedisplay();
-	glutTimerFunc(trigger_time, timer_func, 0);
+	if (timer == false) /* do not set the timer if already done */
+	{
+		timer = true;
+	    glutTimerFunc(trigger_time, timer_func, 0);
+	}
 }
 
 
@@ -276,6 +281,7 @@ void timer_func(int value)
 {
 	shape = NOSHAPE;
 	glutPostRedisplay();
+	timer = false;
 }
 
 
